@@ -5,6 +5,7 @@ import SeasonOpener from '../components/SeasonOpener.jsx';
 import LoveChoice from '../components/LoveChoice.jsx';
 import TrainingRivalry from '../components/TrainingRivalry.jsx';
 import { YOUTH_TRAINING_OPTION, YOUTH_OPPORTUNITY_OPTION, YOUTH_SOCIAL_OPTION } from '../engine.js';
+import { tierAccentKey } from '../playerCardUtils.js';
 
 const categories = {
   TRAINING: { table: YOUTH_TRAINING_OPTION, keys: Object.keys(YOUTH_TRAINING_OPTION) },
@@ -32,7 +33,7 @@ export default function YouthScreen({
   // 桌面版空著也是浪費，這份資料(yearIndex)本來就有，順手給個位置。
   const youthSteps = [1, 2, 3];
   return (
-    <div className="game-shell">
+    <div className="game-shell" data-tier={tierAccentKey(S)}>
       <PlayerHeader S={S} />
 
       <div className="game-body">

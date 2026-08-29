@@ -38,6 +38,7 @@ import {
   RISK_TIERS,
   SOCIAL_OPTION,
   PATHS,
+  LV,
 } from './engine.js';
 import TitleScreen from './screens/TitleScreen.jsx';
 import CreateScreen from './screens/CreateScreen.jsx';
@@ -139,6 +140,14 @@ export default function App() {
   const [seasonOfferState, setSeasonOfferState] = useState({ pending: null });
   const [proLine, setProLine] = useState([]);
   const [proStat, setProStat] = useState(null);
+  // 晉級瞬間的畫面提示(見 index.css .game-shell[data-tier] 那組聯賽層級
+  // accent)：driveSeasonGen 結算完這季才知道 S.tier 有沒有變，比對的是
+  // finishProPick 開始跑這季 generator「之前」記下的層級——tierBeforeSeason
+  // 只是暫存這一步比較用，不是要拿去渲染的資料，用 ref 存。降級也會改
+  // S.tier，但降級不該慶祝，proPromoted 只在真的往上爬時才設 true(見
+  // driveSeasonGen 裡的 LV[...].tier 數字比較)。
+  const tierBeforeSeason = useRef(null);
+  const [proPromoted, setProPromoted] = useState(null);
   const [proRisk, setProRisk] = useState({ riskTag: null, riskFlavor: '', categoryFlavor: '', investFlavor: '', titlesUnlocked: [] });
   const [history, setHistory] = useState([]);
   const prevLog = useRef(null);
@@ -546,6 +555,7 @@ export default function App() {
     // 一次只會停在一個 yield 上)——driveSeasonGen 統一處理「停下來問
     // 玩家」還是「直接跑完」兩種情況，finishProPick/handleSeasonOfferPick
     // 都呼叫同一個，不要各寫一份。
+    tierBeforeSeason.current = S.current.tier;
     const gen = resolveSeasonChoiceGen(S.current, ri, chance, category, option, riskTierKey, partialLog.current);
     seasonGen.current = { gen, category };
     driveSeasonGen(gen.next());
@@ -571,6 +581,13 @@ export default function App() {
     setProLine(lines);
     setProStat(log.stat);
     setProRisk(buildRiskDisplay(S.current, category, log.yearlyChoice));
+    // 晉級瞬間：只在層級數字真的往上爬才算(LV[...].tier 是 1/2/3 的
+    // 序數)，降級/租借造成的 S.tier 變動不觸發——見上面 proPromoted 那段
+    // 稽核說明。tierBeforeSeason.current 為 null(青訓期沒有 S.tier)時
+    // 這個比較天然不會誤觸發。
+    const before = tierBeforeSeason.current;
+    const after = S.current.tier;
+    setProPromoted(before && after && after !== before && LV[after].tier > LV[before].tier ? after : null);
     setProMode('result');
     const newHistory = [...history, { year: log.year, age: log.age, lines }];
     setHistory(newHistory);
@@ -669,6 +686,7 @@ export default function App() {
           lastLine={proLine}
           lastStat={proStat}
           risk={proRisk}
+          promotedTo={proPromoted}
           history={history}
           onAllocationConfirm={handleProAllocationConfirm}
           onLoveChoicePick={handleLoveChoicePick}

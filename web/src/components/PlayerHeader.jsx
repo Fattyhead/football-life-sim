@@ -23,7 +23,10 @@ export default function PlayerHeader({ S }) {
         </span>
         {S.club && <span>{S.club}</span>}
         <span>
-          {(S.tier ? LV[S.tier].label : stageLabel(S))} · {posLabel(S)}
+          {/* 聯賽層級標籤跟著 .game-shell[data-tier] 那組 accent 走(見
+              index.css 的稽核說明)，這裡直接吃 CSS 變數繼承，不用另外
+              判斷——.game-shell 上的 data-tier 屬性哪裡設就從哪裡生效。 */}
+          <span className="league-label">{S.tier ? LV[S.tier].label : stageLabel(S)}</span> · {posLabel(S)}
         </span>
         {/* 金額一律加 € 符號——S.wage/S.savings 這輪貨幣重新校準之後已經是
             真的歐元年薪/存款量級(見 data/contract.js WAGE_BASE 的稽核

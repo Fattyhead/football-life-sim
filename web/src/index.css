@@ -18,6 +18,38 @@
   --success: #6fae5a;
   --font-display: 'Teko', 'Noto Sans TC', sans-serif;
   --font-body: 'Noto Sans TC', system-ui, sans-serif;
+
+  /* 稽核修正(使用者反饋：升聯賽要有成就感)：聯賽層級 accent 色票，跟
+     決策稿(見這輪對話討論的「方向A：銅/銀/金」)定案的方向一致——保留
+     --gold/--gold-soft 給稱號/掛靴卡/標題這些「跟聯賽層級無關、任何
+     畫面都該長一樣」的既有用途完全不動，這裡另開一組 --tier-accent
+     系統，只給 .game-shell[data-tier] 這個作用域內、真的要反映「你現在
+     在哪個聯賽」的元素用(OVR徽章/頭部下邊框，見下面 .tier-badge/
+     .game-header 那幾條)。預設值(沒有 data-tier 包住時)就是現有金色，
+     這樣任何忘記包 data-tier 的地方不會變成沒定義的顏色，只是看起來
+     跟改版前一樣。使用者確認選了方向A，方向B(冷→暖)的色票留在稽核
+     討論稿裡沒有寫進正式版——五大聯賽是玩家花最多時間盯著的畫面，
+     方向A讓那個階段收斂回遊戲本來的識別金色，方向B反而把飽和度最高
+     的暖色留給曝光時間最長的階段，兩相權衡選了A。 */
+  --tier-accent: var(--gold);
+  --tier-accent-soft: var(--gold-soft);
+}
+
+.game-shell[data-tier='youth'] {
+  --tier-accent: #7a92a8;
+  --tier-accent-soft: #a9bdcc;
+}
+.game-shell[data-tier='local'] {
+  --tier-accent: #b3773f;
+  --tier-accent-soft: #d69a63;
+}
+.game-shell[data-tier='feeder'] {
+  --tier-accent: #a6b3bd;
+  --tier-accent-soft: #d4dce1;
+}
+.game-shell[data-tier='top5'] {
+  --tier-accent: var(--gold);
+  --tier-accent-soft: var(--gold-soft);
 }
 
 * {
@@ -90,7 +122,10 @@ body {
 .game-header {
   flex: 0 0 auto;
   padding: clamp(12px, 3vw, 20px) clamp(16px, 4vw, 32px) 12px;
-  border-bottom: 1px solid var(--border);
+  /* 頭部底線混入一點 tier-accent(35%)，整場戲最常駐、抬頭就看得到的
+     位置給個很淡的層級色暗示——刻意壓低比例，不要變成一條顯眼的色條，
+     這是氛圍提示，不是裝飾焦點。 */
+  border-bottom: 1px solid color-mix(in srgb, var(--tier-accent) 35%, var(--border));
   background: var(--bg);
   display: flex;
   flex-direction: column;
@@ -180,12 +215,12 @@ body {
   }
 
   .game-rail {
-    border-right: 1px solid var(--border);
+    border-right: 1px solid color-mix(in srgb, var(--tier-accent) 25%, var(--border));
     background: var(--surface);
   }
 
   .game-panel {
-    border-left: 1px solid var(--border);
+    border-left: 1px solid color-mix(in srgb, var(--tier-accent) 25%, var(--border));
     background: var(--surface);
   }
 
@@ -373,10 +408,18 @@ select:focus {
   margin-right: 4px;
 }
 
+/* OVR徽章跟著聯賽層級 accent 走(見 :root 那組 --tier-accent 稽核說明)——
+   這裡是整個遊戲裡最適合反映「你現在站在哪個層級」的單一數字，青訓期
+   冷灰藍、地區聯賽銅、跳板聯賽銀、五大聯賽收斂回原本的金。 */
+.league-label {
+  color: var(--tier-accent-soft);
+  font-weight: 500;
+}
+
 .tier-badge {
   font-family: var(--font-display);
   font-size: 18px;
-  color: var(--gold);
+  color: var(--tier-accent);
   letter-spacing: 0.04em;
 }
 
@@ -756,6 +799,24 @@ select:focus {
   color: var(--gold-soft);
   font-family: var(--font-display);
   font-size: 15px;
+  text-align: center;
+}
+
+/* 晉級瞬間的 banner(見 ProScreen.jsx 的稽核說明)——跟 .title-unlock-banner
+   同一種樣式骨架，只是顏色吃 --tier-accent(新層級的顏色，這時候 S.tier
+   已經是升級後的值)，不是固定金色，銅/銀/金晉級各自長對應的顏色。放在
+   結果卡最上面，比賽季數據還先看到，晉級這件事在敘事上就是比這季踢得
+   好不好更大的事。 */
+.promotion-banner {
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--tier-accent);
+  background: color-mix(in srgb, var(--tier-accent) 14%, var(--surface-2));
+  color: var(--tier-accent-soft);
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 600;
   text-align: center;
 }
 

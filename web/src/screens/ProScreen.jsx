@@ -7,7 +7,8 @@ import TrainingRivalry from '../components/TrainingRivalry.jsx';
 import AgentLine from '../components/AgentLine.jsx';
 import NationalRivalChoice from '../components/NationalRivalChoice.jsx';
 import SeasonOffer from '../components/SeasonOffer.jsx';
-import { TRAINING_OPTION, OPPORTUNITY_OPTION, SOCIAL_OPTION } from '../engine.js';
+import { TRAINING_OPTION, OPPORTUNITY_OPTION, SOCIAL_OPTION, LV } from '../engine.js';
+import { tierAccentKey } from '../playerCardUtils.js';
 
 function seasonStatLine(S, stat) {
   return S.pos === 'GK'
@@ -28,6 +29,7 @@ export default function ProScreen({
   lastLine,
   lastStat,
   risk,
+  promotedTo,
   history,
   onAllocationConfirm,
   onLoveChoicePick,
@@ -54,7 +56,7 @@ export default function ProScreen({
   // 「操作」的性質分流到兩個容器，寬螢幕才能左右並排展示(見 index.css
   // .game-body 的 grid 版面)，窄螢幕則靠 CSS order 疊回原本的視覺順序。
   return (
-    <div className="game-shell">
+    <div className="game-shell" data-tier={tierAccentKey(S)}>
       <PlayerHeader S={S} />
 
       <div className="game-body">
@@ -87,6 +89,17 @@ export default function ProScreen({
 
           {mode === 'result' && (
             <div className="card">
+              {/* 晉級瞬間(見 App.jsx driveSeasonGen 的稽核說明)：只在這季
+                  真的往上爬一個聯賽層級才會有 promotedTo，用新層級自己的
+                  accent 色系(見 index.css .game-shell[data-tier])畫這個
+                  banner，不是固定金色——地區→跳板是銅底，跳板→五大才是
+                  金底，晉級的「往哪裡去」本身也是資訊，不該所有晉級都
+                  長一樣。 */}
+              {promotedTo && (
+                <div className="promotion-banner">
+                  🏆　晉級{LV[promotedTo].label}！
+                </div>
+              )}
               {lastStat && <p className="season-stat-line">{seasonStatLine(S, lastStat)}</p>}
               {risk.riskTag && (
                 <span className={`risk-result-tag ${risk.riskTag.success ? 'success' : 'fail'}`}>

@@ -26,6 +26,24 @@ export function posLabel(S) {
   return S.subPosition ? DPN[S.subPosition] : POSN[S.pos];
 }
 
+/* 稽核修正(使用者反饋：想要「升聯賽=畫面變好看」的成就感)：回傳目前
+   該用哪一組聯賽層級 accent 色票(見 index.css .game-shell[data-tier]
+   那組定案：青訓冷灰藍→地區銅→跳板銀→五大金，銅/銀/金跟現有稱號系統
+   的金色天然接軌，使用者確認過的方向)。租借期間刻意看 S.loanTier 不是
+   S.tier——玩家實際在哪個層級踢球，畫面就該長那個層級的樣子，租借合約
+   本身不影響「東家」的 S.tier，但畫面體感要跟著人走，不是跟著合約走。
+   S.tier 還沒指派(青訓期、或極少數的過渡狀態)一律落在 youth，跟
+   stageLabel() 的「業餘」保底邏輯同一個精神：沒有更明確的層級資訊時，
+   不亂猜一個聯賽等級出來。 */
+export function tierAccentKey(S) {
+  if (S.stage === 'YOUTH') return 'youth';
+  const effectiveTier = S.onLoan && S.loanTier ? S.loanTier : S.tier;
+  if (effectiveTier === 'TOP5') return 'top5';
+  if (effectiveTier === 'FEEDER') return 'feeder';
+  if (effectiveTier === 'LOCAL') return 'local';
+  return 'youth';
+}
+
 export function careerTotals(S) {
   const all = [...(S.stats.LOCAL || []), ...(S.stats.FEEDER || []), ...(S.stats.TOP5 || [])];
   if (all.length === 0) return null;
