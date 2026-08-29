@@ -194,15 +194,58 @@ body {
 }
 
 @media (min-width: 1100px) {
+  /* 稽核修正(使用者反饋：訓練/機會/社交選單放在螢幕最底部整條通欄，
+     擠壓整個畫面)：桌面版真正要解決的是「.game-footer(類別選單/繼續
+     按鈕)也要收進右欄」，不是只有 .game-body 那三塊分欄——原本
+     .game-footer 是 .game-shell 的另一個 flex 子項，跟 .game-body 平行，
+     沒辦法只用 .game-body 內部的 grid 把它拉過去。這裡改成整個
+     .game-shell 才是 grid 容器，.game-body 在這個寬度降級成
+     display:contents(讓 rail/content/panel 直接變成 .game-shell 的 grid
+     子項，不受中間這層 wrapper 影響)，.game-footer 也變成 grid 子項，
+     跟 .game-panel 共用同一欄(第三欄)但佔第三列——rail/content 這兩欄
+     則跨第二三列，撐滿到底部，視覺上「操作卡片(panel)+ 選單/繼續按鈕
+     (footer)疊在右欄同一直欄裡」，不再是橫跨整個畫面寬度的一條通欄。
+     手機版完全不受影響：.game-body 手機版還是真正的 flex 容器(見上面
+     預設規則)，.game-footer 也還是原本 .game-shell 的 flex 子項，維持
+     手機版「操作列釘在最底部」的既有行為。 */
   .game-shell {
     max-width: 1320px;
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr) 360px;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'header header header'
+      'rail content panel'
+      'rail content footer';
+    overflow: hidden;
+  }
+
+  .game-header {
+    grid-area: header;
   }
 
   .game-body {
-    display: grid;
-    grid-template-columns: 260px minmax(0, 1fr) 360px;
-    align-items: stretch;
-    overflow: visible;
+    display: contents;
+  }
+
+  .game-rail {
+    grid-area: rail;
+  }
+
+  .game-content {
+    grid-area: content;
+  }
+
+  .game-panel {
+    grid-area: panel;
+  }
+
+  .game-footer {
+    grid-area: footer;
+    padding: 16px 20px 20px;
+    border-top: none;
+    border-left: 1px solid color-mix(in srgb, var(--tier-accent) 25%, var(--border));
+    background: var(--surface);
   }
 
   .game-rail,
@@ -226,6 +269,16 @@ body {
 
   .game-content {
     padding: 20px clamp(20px, 3vw, 40px);
+  }
+
+  /* .game-panel 這欄沒東西時(mode==='choice'/'result'，操作卡片都不在
+     panel 裡，見 ProScreen.jsx)不留一截空的深色方塊卡在 footer 上方——
+     跟手機版 .game-panel:empty 那條同一個精神，只是桌面版還要考量
+     background/border 這些桌面版才有的裝飾，直接關掉整塊。 */
+  .game-panel:empty {
+    display: none;
+    border: none;
+    background: none;
   }
 
   /* 生涯軌跡在桌面版是自己一整欄，不用再靠內部 max-height 限制高度
@@ -564,6 +617,21 @@ select:focus {
 /* ---------- 兩步驟年度選擇(見 ChoiceMenu.jsx) ---------- */
 .category-pick-grid {
   grid-template-columns: repeat(3, 1fr);
+}
+
+/* 稽核修正(使用者反饋：類別選單收進桌面版右欄後被壓得太窄)：桌面版
+   這排按鈕現在放在 .game-footer 裡，寬度只有 .game-panel 那一欄
+   (~320px)，硬擠三欄文字會被壓得比手機版還難讀——套用跟手機版
+   max-width:500px 那個 override 同一套「窄空間就改單欄直排」邏輯，只是
+   觸發條件從「螢幕窄」換成「這個版面的右欄本來就窄」。這條規則故意寫
+   在 .category-pick-grid 的基礎規則之後(cascade 順序)，不是寫在前面
+   那個 .game-shell 桌面版 media query 區塊裡——兩條規則的 selector
+   specificity 一樣，寫在基礎規則之前會被後面的基礎規則蓋掉，這是這輪
+   稽核踩過的坑，順手註記。 */
+@media (min-width: 1100px) {
+  .category-pick-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .category-pick-btn {
