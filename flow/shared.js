@@ -161,6 +161,35 @@ export function previewAbilityLevel(S, key, points, isGK) {
   return Math.min(ABILITY_HARD_CAP, ab);
 }
 
+/* 稽核抓出來的斷點(使用者實測回報)：previewAbilityLevel() 只回傳「最後
+   會變成幾級」，季初分配畫面(SeasonOpener.jsx)原本只能顯示「+N 點」這種
+   「總共加了幾點」的數字——但 costPerLevel() 本來就會隨等級/潛力/超過
+   潛力變動(60以下1點、70以下也是1點、75以下2點、之後3點，超過潛力還要
+   再乘倍率)，玩家看著同一個「+N」卻不知道「這一級到底要湊滿幾點才會
+   跳」，原版(YaKyoLife)是直接顯示「這一級的進度/這一級要花多少」的
+   X/Y 格式(比如 2/2、4/4、8/8)，比「+N 點」直覺得多，不用玩家自己心算
+   成本表。這裡另外提供一個回傳進度細節的版本，跟 previewAbilityLevel()
+   共用同一套迴圈邏輯(不是重新複寫一份簡化版)，只是把原本被丟掉的
+   progress/當前這一級的成本一併回傳，SeasonOpener.jsx 拿這個直接顯示
+   X/Y，不用自己重新推算一次成本表。 */
+export function previewAbilityProgress(S, key, points, isGK) {
+  if (S.ab[key] === undefined) return null;
+  const pot = S.pot[key];
+  let ab = S.ab[key];
+  let progress = (S.abProgress[key] || 0) + points;
+  const discountMult = S.overPotentialDiscountMult ?? 1;
+  let cost = costPerLevel(ab, pot, isGK, discountMult);
+  while (ab < ABILITY_HARD_CAP && progress >= cost) {
+    progress -= cost;
+    ab += 1;
+    cost = costPerLevel(ab, pot, isGK, discountMult);
+  }
+  const level = Math.min(ABILITY_HARD_CAP, ab);
+  // 已經到硬上限：沒有「下一級」可言，progress/cost 都沒有意義，呼叫端
+  // 用 atCap 判斷要不要改顯示「已練滿」。
+  return { level, progress: Math.round(progress * 10) / 10, cost, atCap: level >= ABILITY_HARD_CAP };
+}
+
 /* 把「骰出來的點數」(或機會/社交小幅加成的點數，或風險層失敗時的負數
    倒扣，三邊共用同一套邏輯，見 flow/yearlyChoice.js applyAbilityNudge 的
    呼叫)累積進 S.abProgress，湊滿當前等級的成本就跳一級、用新等級重新

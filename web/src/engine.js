@@ -45,7 +45,7 @@ export {
 } from '../../flow/agentLine.js';
 export { rollSeasonOpener, applySeasonAllocation, trackSeasonSixes } from '../../flow/seasonOpener.js';
 export { optionHasRiskTier, availableOptions } from '../../flow/yearlyChoice.js';
-export { effectiveRiskSuccessPct, previewAbilityLevel } from '../../flow/shared.js';
+export { effectiveRiskSuccessPct, previewAbilityLevel, previewAbilityProgress } from '../../flow/shared.js';
 export { overPotentialMultiplier } from '../../data/growth.js';
 export {
   computeRiskStreakFlavor,

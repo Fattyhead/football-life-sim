@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ABL, POS_AB, ABILITY_HARD_CAP, previewAbilityLevel, overPotentialMultiplier } from '../engine.js';
+import { ABL, POS_AB, ABILITY_HARD_CAP, previewAbilityLevel, previewAbilityProgress, overPotentialMultiplier } from '../engine.js';
 
 /* 季初特訓——骰子成長(大頭)的自由分配畫面，對照 season_screen_prototype.html
    mockup 已經定案、使用者驗收過的設計：每季開場先擲 3-6 顆骰(見
@@ -71,6 +71,15 @@ export default function SeasonOpener({ S, opener, onConfirm }) {
               const overMult = overPotential ? overPotentialMultiplier(displayCur - S.pot[k] + 1, isGK) : 1;
               const canAdd = remaining > 0 && displayCur < ABILITY_HARD_CAP;
               const canSub = spentHere > 0;
+              // 稽核修正(使用者實測回報)：原本這裡的「+N」是「總共加了幾點」，
+              // 不是「這一級湊滿要花幾點」——玩家看著同一個 +N，猜不出到底
+              // 還要幾點才會跳一級，原版(YaKyoLife)是直接顯示這一級的
+              // 進度/成本(X/Y，比如 2/2、8/8)。previewAbilityProgress()
+              // 回傳的就是這一級目前累積了多少、這一級總共要花多少，兩個
+              // 數字直接顯示成 X/Y，不用玩家自己心算成本表(見
+              // flow/shared.js 的稽核說明)。已經到硬上限(atCap)時沒有
+              // 「下一級」可言，改顯示「已練滿」。
+              const prog = previewAbilityProgress(S, k, spentHere, isGK);
               return (
                 <div className="allocation-row" key={k}>
                   <span className="allocation-label">{ABL[k]}</span>
@@ -82,7 +91,7 @@ export default function SeasonOpener({ S, opener, onConfirm }) {
                     <button className="stepper-btn" disabled={!canSub} onClick={() => adjust(k, -1)}>
                       −
                     </button>
-                    <span className="allocation-spent">{spentHere > 0 ? `+${spentHere}` : '0'}</span>
+                    <span className="allocation-spent">{prog && !prog.atCap ? `${prog.progress}/${prog.cost}` : '已練滿'}</span>
                     <button className="stepper-btn" disabled={!canAdd} onClick={() => adjust(k, 1)}>
                       ＋
                     </button>

@@ -6,6 +6,21 @@ import { POSN, DPN, LOVE_STATUS, SQUAD_CHEMISTRY } from './engine.js';
    數值換個說法，不加新state)，隊伍核心力是真的有機制效果的欄位(見
    flow/shared.js squadChemistryMult)，這裡只負責它的顯示標籤。 */
 
+/* 稽核修正(使用者實測回報)：頭部固定條這個位置很窄，薪資/存款是歐元
+   實際量級(見 data/contract.js 的稽核說明，這輪貨幣重新校準之後已經是
+   真的歐元金額，不是抽象指數了)，六七位數字擠在一起很難一眼看出大小。
+   這裡只在頭部這個「隨時看得到但不用細看」的位置用縮寫(萬用K/百萬用
+   M，數字世界通用、跟 € 符號搭配也很常見)，終局結算卡/生涯數據那些
+   要看精確數字的地方(EndingCard.jsx/EndingScreen.jsx)維持原本的完整
+   千分位數字，不要跟著改——兩個是不同的閱讀情境，各自該有各自的精度。 */
+export function formatMoney(v) {
+  const n = Number(v) || 0;
+  const abs = Math.abs(n);
+  if (abs >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
+  if (abs >= 1_000) return (n / 1_000).toFixed(1) + 'K';
+  return String(Math.round(n));
+}
+
 export function posLabel(S) {
   if (S.pos === 'GK') return POSN.GK;
   return S.subPosition ? DPN[S.subPosition] : POSN[S.pos];
