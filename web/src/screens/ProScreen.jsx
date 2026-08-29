@@ -9,6 +9,7 @@ import NationalRivalChoice from '../components/NationalRivalChoice.jsx';
 import SeasonOffer from '../components/SeasonOffer.jsx';
 import { TRAINING_OPTION, OPPORTUNITY_OPTION, SOCIAL_OPTION, LV } from '../engine.js';
 import { tierAccentKey } from '../playerCardUtils.js';
+import { useResetScrollOnMode } from '../useResetScrollOnMode.js';
 
 function seasonStatLine(S, stat) {
   return S.pos === 'GK'
@@ -46,6 +47,10 @@ export default function ProScreen({
     SOCIAL: { table: SOCIAL_OPTION, keys: options.SOCIAL },
   };
 
+  // 稽核修正(使用者反饋：季初特訓卡片不會自動回到面板頂部)：見
+  // useResetScrollOnMode.js 的稽核說明。
+  const { bodyRef, contentRef, panelRef } = useResetScrollOnMode(mode);
+
   // 稽核修正(使用者反饋：桌面版三欄佈局)：中段拆成三塊獨立的區塊——
   // .game-rail 放生涯軌跡(唯讀、只會愈積愈多，跟「這一季」無關)，
   // .game-content 放球員詳細資料+這一季的唯讀敘事(frameText/result)，
@@ -59,7 +64,7 @@ export default function ProScreen({
     <div className="game-shell" data-tier={tierAccentKey(S)}>
       <PlayerHeader S={S} />
 
-      <div className="game-body">
+      <div className="game-body" ref={bodyRef}>
         <div className="game-rail">
           {history.length > 0 && (
             <div className="card log-scroll">
@@ -76,7 +81,7 @@ export default function ProScreen({
           )}
         </div>
 
-        <div className="game-content">
+        <div className="game-content" ref={contentRef}>
           <PlayerDetail S={S} />
 
           {mode === 'choice' && (
@@ -121,7 +126,7 @@ export default function ProScreen({
           )}
         </div>
 
-        <div className="game-panel">
+        <div className="game-panel" ref={panelRef}>
           {mode === 'allocate' && <SeasonOpener S={S} opener={opener} onConfirm={onAllocationConfirm} />}
 
           {mode === 'loveChoice' && <LoveChoice S={S} pending={lovePending} onPick={onLoveChoicePick} />}

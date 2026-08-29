@@ -6,6 +6,7 @@ import LoveChoice from '../components/LoveChoice.jsx';
 import TrainingRivalry from '../components/TrainingRivalry.jsx';
 import { YOUTH_TRAINING_OPTION, YOUTH_OPPORTUNITY_OPTION, YOUTH_SOCIAL_OPTION } from '../engine.js';
 import { tierAccentKey } from '../playerCardUtils.js';
+import { useResetScrollOnMode } from '../useResetScrollOnMode.js';
 
 const categories = {
   TRAINING: { table: YOUTH_TRAINING_OPTION, keys: Object.keys(YOUTH_TRAINING_OPTION) },
@@ -32,11 +33,14 @@ export default function YouthScreen({
   // 那種逐季累積的生涯軌跡清單，左欄改放「青訓三年」進度小清單——反正
   // 桌面版空著也是浪費，這份資料(yearIndex)本來就有，順手給個位置。
   const youthSteps = [1, 2, 3];
+  // 稽核修正(使用者反饋：季初特訓卡片不會自動回到面板頂部)：見
+  // useResetScrollOnMode.js 的稽核說明，跟 ProScreen.jsx 同一套。
+  const { bodyRef, contentRef, panelRef } = useResetScrollOnMode(mode);
   return (
     <div className="game-shell" data-tier={tierAccentKey(S)}>
       <PlayerHeader S={S} />
 
-      <div className="game-body">
+      <div className="game-body" ref={bodyRef}>
         <div className="game-rail">
           <div className="card youth-progress-card">
             <p className="eyebrow">青訓進度</p>
@@ -48,7 +52,7 @@ export default function YouthScreen({
           </div>
         </div>
 
-        <div className="game-content">
+        <div className="game-content" ref={contentRef}>
           <h1 className="screen-title" style={{ fontSize: 'clamp(22px, 5vw, 30px)' }}>
             青訓第 {yearIndex} 年
           </h1>
@@ -74,7 +78,7 @@ export default function YouthScreen({
           )}
         </div>
 
-        <div className="game-panel">
+        <div className="game-panel" ref={panelRef}>
           {mode === 'allocate' && <SeasonOpener S={S} opener={opener} onConfirm={onAllocationConfirm} />}
 
           {mode === 'loveChoice' && <LoveChoice S={S} pending={lovePending} onPick={onLoveChoicePick} />}
