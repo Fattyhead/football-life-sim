@@ -116,7 +116,7 @@ export function rollDiceCount(ri) {
   return DICE_COUNT_TABLE[DICE_COUNT_TABLE.length - 1].count;
 }
 
-/* 單顆骰：1-6點，floor 是天才(4)/勤奮(5)疊加後取 Math.max 算出來的保底，
+/* 單顆骰：1-6點，floor 是天才(4)/埋頭苦練的性格(4)疊加後取 Math.max 算出來的保底，
    一般情況 floor=1(沒有特殊保底)。 */
 export function rollDie(ri, floor = 1) {
   return Math.max(floor, ri(1, 6));
@@ -128,7 +128,7 @@ export function rollDie(ri, floor = 1) {
    說明)，不是另開一個固定數字：現值70、潛力只有55的人，超過潛力後還是
    落在70-74這個級距，付的是「70-74本來的成本」×倍率，不是憑空一個
    新數字。 */
-// discountMult：特訓狂人(TRAINING_MASTERY.TIER2，見 data/mastery.js)解鎖後
+// discountMult：特訓成癮(TRAINING_MASTERY.TIER2，見 data/mastery.js)解鎖後
 // 疊乘在超過潛力的加倍成本上，預設1不影響沒拿到這個稱號的玩家。呼叫端
 // (addAbilityPoints/previewAbilityLevel)一律傳 S.overPotentialDiscountMult，
 // 不在這裡直接讀 S，維持這個函式本身不依賴完整 state 的純函式寫法。
@@ -272,7 +272,7 @@ export function applyMasteryEffect(S, effect) {
   if (effect.releaseRiskDiscountGain) S.releaseRiskDiscount = (S.releaseRiskDiscount || 0) + effect.releaseRiskDiscountGain;
   if (effect.growthSpeedMult) S.growthSpeedMult = (S.growthSpeedMult ?? 1) + effect.growthSpeedMult;
   if (effect.popularityBonus) S.popularity += effect.popularityBonus;
-  // 特訓狂人(TRAINING_MASTERY.TIER2)專用：疊乘(不是相加)，跟 growthSpeedMult
+  // 特訓成癮(TRAINING_MASTERY.TIER2)專用：疊乘(不是相加)，跟 growthSpeedMult
   // 刻意分開的欄位，只影響超過潛力的加倍成本，不影響風險層的一般幅度。
   if (effect.overPotentialDiscountMult) S.overPotentialDiscountMult = (S.overPotentialDiscountMult ?? 1) * effect.overPotentialDiscountMult;
 }
@@ -301,7 +301,7 @@ function rollReleaseClause(ri) {
    EXEC_NETWORKING/RETIREMENT_PREP+穩健風險層)能疊到 0.51，遠超過
    POS_MARKET(位置溢價本身的量級只有 -0.15~0.35，見 data/abilities.js)、
    也遠超過所有一次性稱號溢價全部疊滿的合理總和(ETERNAL_CAPTAIN 0.15+
-   代表性 PLAYING_STYLE 0.10~0.15+經紀人羈絆 0.05+精算人生 0.05≈0.35~0.40)
+   代表性 PLAYING_STYLE 0.10~0.15+經紀人羈絆 0.05+精算成癮 0.05≈0.35~0.40)
    ——等於「一直重選同一個便宜選項」比「真的拿到一堆精英稱號」還好賺，
    本末倒置。封頂訂在 0.35，貼齊 POS_MARKET 的量級上限、也大致等於一次性
    稱號全拿的合理總和，讓「重選同一個選項」不能超過「真的拿到稀有成就」

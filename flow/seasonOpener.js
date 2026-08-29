@@ -16,7 +16,7 @@ import { GENIUS, LATE_BLOOM_GENIUS } from '../data/mastery.js';
 import { positionKey, rollDiceCount, rollDie, addAbilityPoints, squadChemistryMult, applyMasteryEffect } from './shared.js';
 
 /* 擲骰：3-6顆(權重見 data/growth.js DICE_COUNT_TABLE)，每顆1-6點，
-   天才/勤奮的保底(S.diceFloorBonus)套在每一顆骰子上。stage==='PRO' 才吃
+   天才/埋頭苦練的性格的保底(S.diceFloorBonus)套在每一顆骰子上。stage==='PRO' 才吃
    聯賽層級倍率(TRAINING_MULT)/隊伍默契(squadChemistryMult)——這兩個是
    職業生涯限定的概念，青訓期還沒有俱樂部/聯賽層級，維持原本
    rollYouthDice() 的簡單版(骰子總和直接就是點數池，不疊乘數)。委身

@@ -266,15 +266,15 @@ export function newState(name, jersey, pos, regionCode, ri) {
     categoryPickCount: { TRAINING: 0, OPPORTUNITY: 0, SOCIAL: 0 }, // 職業生涯累積選了哪個類別幾次(青訓不算)，三類別委身特質的門檻
     youthSixes: 0, // 青訓三年訓練骰子累積擲出幾次「6」，天才特質判定用
     lateBloomSixes: 0, // 19-22歲訓練骰子累積擲出幾次「6」，埋沒的天才判定用
-    diceFloorBonus: 0, // 天才(4)/勤奮(5)疊加後 Math.max 出來的骰子保底，0代表沒有特殊保底
+    diceFloorBonus: 0, // 天才(4)/埋頭苦練的性格(4，稽核順手訂正：原本這裡誤寫成5)疊加後 Math.max 出來的骰子保底，0代表沒有特殊保底
     // 訓練/機會選項底下風險層(穩健/平衡/冒進)累積選了幾次，比照
     // categoryPickCount 的寫法——稱號判定(小心翼翼/走在鋼索上的男人等)/
     // 隱晦線索(見 flow/streakFlavor.js)的門檻用這個算，見 data/growth.js
     // RISK_TIERS。
     riskTierPickCount: { SAFE: 0, BALANCED: 0, AGGRESSIVE: 0 },
-    transferBuzzFlatBonus: 0, // 人脈玩家(OPPORTUNITY_MASTERY.TIER1)疊加的每季固定轉會買氣加成(transferBuzz本身會衰退，一次性加成意義不大，這個要每季持續生效)
+    transferBuzzFlatBonus: 0, // 廣結善緣的性格(OPPORTUNITY_MASTERY.TIER1)疊加的每季固定轉會買氣加成(transferBuzz本身會衰退，一次性加成意義不大，這個要每季持續生效)
     growthSpeedMult: 1, // 機會/社交深度委身的代價：疊乘在 addAbilityPoints() 點數上的成長速度係數
-    overPotentialDiscountMult: 1, // 特訓狂人(TRAINING_MASTERY.TIER2)解鎖的好處：疊乘在超過潛力後的加倍成本上，見 flow/shared.js costPerLevel()
+    overPotentialDiscountMult: 1, // 特訓成癮(TRAINING_MASTERY.TIER2)解鎖的好處：疊乘在超過潛力後的加倍成本上，見 flow/shared.js costPerLevel()
     overPotentialLevelsGained: 0, // 這輩子累積練出過幾級超過自己潛力的能力，TRAINING_HONOR(見 data/mastery.js)的門檻資源
     // 當季狀態修正，直接加在 RAT 上的點數(不是原版 seasonFactor 那種乘數)，
     // 每季由 flow/romance.js 依戀愛/婚姻/小孩狀態重新算過，不用手動遞減。

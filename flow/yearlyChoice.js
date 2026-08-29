@@ -504,7 +504,7 @@ export function applyYearlyChoice(S, ri, chance, category, optionKey, riskTierKe
     S.seasonForm += ri(-1, 1);
   }
 
-  // 「人脈玩家」(OPPORTUNITY_MASTERY.TIER1)是持續生效的被動特質，不是只在
+  // 「廣結善緣的性格」(OPPORTUNITY_MASTERY.TIER1)是持續生效的被動特質，不是只在
   // 選了機會類別那季才加——跟 transferBuzz 本身會衰退是同一個道理，這個
   // 加成每季都要疊加，不分這季選了哪個類別。
   if (S.transferBuzzFlatBonus) {

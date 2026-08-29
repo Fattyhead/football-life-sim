@@ -24,6 +24,19 @@
   box-sizing: border-box;
 }
 
+/* 稽核修正(美觀/易用性優化)：這遊戲要放到公開網站，鍵盤操作的訪客(不只
+   是滑鼠/觸控)也該看得出「現在焦點在哪個按鈕上」——之前只有 .option-btn
+   自己定義了 focus-visible 樣式，其餘按鈕(.primary-btn/.secondary-btn/
+   .stepper-btn/.back-btn 這些)完全沒有，靠瀏覽器預設的藍色外框在深色
+   底上很突兀也容易被忽略。這裡補一個全域的保底規則(金色外框，跟整體
+   識別色一致)，個別按鈕類別如果想要更貼近自己 hover 樣式的 focus 效果
+   (見下面 .primary-btn/.secondary-btn/.stepper-btn 各自的規則)，那些
+   規則疊加在這個保底規則之上，不衝突。 */
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
 html,
 body {
   margin: 0;
@@ -207,7 +220,8 @@ select:focus {
   cursor: pointer;
 }
 
-.primary-btn:hover {
+.primary-btn:hover,
+.primary-btn:focus-visible {
   background: var(--gold-soft);
 }
 
@@ -304,7 +318,9 @@ select:focus {
   width: 100%;
   background: none;
   border: none;
-  padding: 0;
+  /* 上下留一點觸控空間(這顆是每個畫面都在的常駐控制項)，透明背景不會
+     因為多了 padding 看起來變厚重，純粹是加大點擊區域。 */
+  padding: 6px 0;
   margin: 0;
   color: inherit;
   font-family: var(--font-body);
@@ -435,7 +451,8 @@ select:focus {
   cursor: pointer;
 }
 
-.back-btn:hover {
+.back-btn:hover,
+.back-btn:focus-visible {
   border-color: var(--gold);
   color: var(--text);
 }
@@ -539,23 +556,33 @@ select:focus {
 .allocation-stepper {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
+/* 稽核修正(美觀/易用性優化)：這遊戲要放到公開網站，行動裝置訪客不會少，
+   但這顆按鈕之前只有 26x26px——遠低於 Apple/Material 建議的最小觸控目標
+   (44px 上下)，而季初分配畫面又是整個遊戲裡點擊頻率最高的畫面(每季都要
+   點好幾次)，越常用的控制項越該經得起手指戳。加大到 38px 並置中內容，
+   桌機看起來還是精巧的小按鈕，手機上點按準確度會差很多。 */
 .stepper-btn {
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
   border: 1px solid var(--border);
   background: var(--surface-2);
   color: var(--text);
   font-family: var(--font-display);
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
-.stepper-btn:hover {
+.stepper-btn:hover,
+.stepper-btn:focus-visible {
   border-color: var(--gold);
 }
 
@@ -960,6 +987,14 @@ select:focus {
   .ec-tier-name {
     font-size: 50px;
   }
+  /* 稽核修正(美觀/易用性優化)：這遊戲要放到公開網站，行動裝置訪客不會
+     少——訓練/機會/社交這三個大按鈕平常固定三欄(.category-pick-grid)，
+     每格裡塞了標題+一整行子選項預覽文字，桌機夠寬還好，窄螢幕會把
+     文字擠得很難讀。窄螢幕下改成單欄直排，寬度換給文字，不用犧牲
+     可讀性去硬擠三欄。 */
+  .category-pick-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ---------- 成就典藏(CollectionScreen.jsx)/標題畫面的次要按鈕 ---------- */
@@ -974,7 +1009,8 @@ select:focus {
   padding: 10px 16px;
   cursor: pointer;
 }
-.secondary-btn:hover {
+.secondary-btn:hover,
+.secondary-btn:focus-visible {
   border-color: var(--gold);
   color: var(--gold);
 }

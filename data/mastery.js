@@ -52,9 +52,22 @@ export const LATE_BLOOM_GENIUS = {
    (每季持續生效的轉會買氣加成，因為 transferBuzz 本身會衰退，一次性加成
    意義不大)/growthSpeedMult(疊乘在風險層成功幅度上)這三個是真的需要
    「解鎖後持續生效」，其餘都是解鎖當下疊加一次到既有欄位就好。 */
+/* 稽核抓出來的斷點(使用者提出「稱號取名要統一」)：這三條委身特質線
+   跟 data/growth.js RISK_TIER_TITLE、data/trainingPartner.js
+   RIVALRY_TIER_TITLE、data/agent.js AGENT_CROSSROADS_TITLE 是完全同一種
+   機制形狀(累積選了同一件事 8/16 次、兩階解鎖)，後三者依
+   [[feedback_honor_naming_convention]] 的「累積型用長句敘事風格」命名
+   (不服輸的性格/較勁成癮/敢賭的性格/豪賭成癮…)，這三個委身特質卻是這個
+   慣例定案「之前」命名的舊稱號(勤奮/特訓狂人/人脈玩家/精算人生/萬人迷/
+   花天酒地)，維持著短稱謂風格——同一種機制、兩套命名邏輯，是真的沒
+   統一，不是刻意的風格差異。改名對齊長句家族：TIER1 統一收在「X的性格」
+   (跟不服輸的性格/敢賭的性格同一個模子)，TIER2 統一收在「X成癮」(跟
+   較勁成癮/豪賭成癮同一個模子，也讓三條線的 TIER2 之間第一次真的讀得出
+   同一個命名邏輯)。舊名稱只留在這則稽核紀錄跟 flow/narrate.js 的敘事句
+   裡(改寫後的新句子)，程式邏輯只認 def.label，改名不影響任何判定。 */
 export const TRAINING_MASTERY = {
   TIER1: {
-    label: '勤奮',
+    label: '埋頭苦練的性格',
     tier: 'RARE',
     threshold: 8,
     cond: '生涯累積選擇「訓練」類別達8次',
@@ -65,7 +78,7 @@ export const TRAINING_MASTERY = {
     effect: { diceFloor: 4 },
   },
   TIER2: {
-    label: '特訓狂人',
+    label: '特訓成癮',
     tier: 'ELITE',
     threshold: 16,
     cond: '生涯累積選擇「訓練」類別達16次',
@@ -110,7 +123,7 @@ export const TRAINING_HONOR = {
     tier: 'RARE',
     threshold: 28,
     cond: '生涯累積練出超過自己潛力的能力等級數達 28 級以上',
-    // 疊乘在特訓狂人(TRAINING_MASTERY.TIER2)同一個欄位上：兩條門檻本來
+    // 疊乘在特訓成癮(TRAINING_MASTERY.TIER2)同一個欄位上：兩條門檻本來
     // 就高度相關(都是「持續投入訓練」的結果)，兩個都拿到會疊出更深的
     // 折扣(0.75×0.85≈0.64)，是「雙管齊下」的合理獎勵，不是無意義重複。
     effect: { overPotentialDiscountMult: 0.85 },
@@ -126,14 +139,14 @@ export const TRAINING_HONOR = {
 
 export const OPPORTUNITY_MASTERY = {
   TIER1: {
-    label: '人脈玩家',
+    label: '廣結善緣的性格',
     tier: 'RARE',
     threshold: 8,
     cond: '生涯累積選擇「機會」類別達8次',
     effect: { transferBuzzFlatBonus: 0.03 }, // 每季持續生效，見 core/state.js S.transferBuzzFlatBonus
   },
   TIER2: {
-    label: '精算人生',
+    label: '精算成癮',
     tier: 'ELITE',
     threshold: 16,
     cond: '生涯累積選擇「機會」類別達16次',
@@ -143,14 +156,14 @@ export const OPPORTUNITY_MASTERY = {
 
 export const SOCIAL_MASTERY = {
   TIER1: {
-    label: '萬人迷',
+    label: '樂於交際的性格',
     tier: 'RARE',
     threshold: 8,
     cond: '生涯累積選擇「社交」類別達8次',
     effect: { popularityBonus: 3 }, // 一次性疊加到 S.popularity(跟其他稱號的 popularityBonus 同一種寫法)
   },
   TIER2: {
-    label: '花天酒地',
+    label: '社交成癮',
     tier: 'ELITE',
     threshold: 16,
     cond: '生涯累積選擇「社交」類別達16次',
