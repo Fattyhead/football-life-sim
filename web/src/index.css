@@ -67,7 +67,15 @@ body {
 /* ---------- 對照原版「上半部球員資料(固定)／中部變動內容(捲動)／
    下半部選項(固定)」三段式畫面——青訓/職業兩個會反覆進出、內容會變長的
    畫面用這個殼，其他一次性畫面(title/create/grade/debutFail/ending)
-   維持原本 .app-shell 單欄置中就好，不需要固定分區。 */
+   維持原本 .app-shell 單欄置中就好，不需要固定分區。
+   稽核修正(使用者反饋：桌面版應該充分利用寬螢幕)：手機版維持原本這套
+   三段式(頭/捲動中段/底部操作列)不動，但中段(.game-body 底下的
+   .game-rail／.game-content／.game-panel 三塊)在寬螢幕改成左中右三欄
+   grid，見下面 min-width:1100px 那個 media query——生涯軌跡(左)／
+   本季敘事(中)／當下要操作的卡片(右)分開放，不再全部擠成同一條窄欄
+   由上往下滑。.game-shell 本身的 flex 排版(header/body/footer 上中下)
+   兩種寬度都通用，只有 .game-body 內部切換 flex(手機單欄)⇄grid(桌面
+   三欄)，不用整個殼重寫。 */
 .game-shell {
   width: 100%;
   max-width: 720px;
@@ -76,6 +84,7 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  margin: 0 auto;
 }
 
 .game-header {
@@ -101,13 +110,45 @@ body {
   color: var(--text);
 }
 
-.game-content {
+/* 手機版：.game-body 本身是唯一的捲動容器，rail/content/panel 三塊
+   只是裡面的 flex 子項，靠 order 排出跟改版前一樣的視覺順序(本季內容→
+   當下要操作的卡片→生涯軌跡在最下面)，不各自獨立捲動——避免手機上
+   出現三條疊在一起的捲軸。桌面版(見 min-width:1100px)把 .game-body
+   換成 grid，這三塊才各自變成獨立捲動的欄。 */
+.game-body {
   flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.game-content {
+  order: 1;
   padding: 16px clamp(16px, 4vw, 32px);
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.game-panel {
+  order: 2;
+  padding: 0 clamp(16px, 4vw, 32px) 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* 手機版沒內容時(青訓畫面沒有生涯軌跡可放)不要留空白 gap；有內容時
+   (職業畫面的生涯軌跡清單)靠內距自己撐開，不用另外判斷。 */
+.game-panel:empty,
+.game-rail:empty {
+  display: none;
+}
+
+.game-rail {
+  order: 3;
+  padding: 0 clamp(16px, 4vw, 32px) 4px;
 }
 
 .game-footer {
@@ -115,6 +156,65 @@ body {
   padding: 12px clamp(16px, 4vw, 32px) clamp(12px, 3vw, 20px);
   border-top: 1px solid var(--border);
   background: var(--bg);
+}
+
+@media (min-width: 1100px) {
+  .game-shell {
+    max-width: 1320px;
+  }
+
+  .game-body {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr) 360px;
+    align-items: stretch;
+    overflow: visible;
+  }
+
+  .game-rail,
+  .game-content,
+  .game-panel {
+    order: initial;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 20px;
+  }
+
+  .game-rail {
+    border-right: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .game-panel {
+    border-left: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .game-content {
+    padding: 20px clamp(20px, 3vw, 40px);
+  }
+
+  /* 生涯軌跡在桌面版是自己一整欄，不用再靠內部 max-height 限制高度
+     (那是給手機版塞在同一條捲動軸裡用的保護措施，見 .log-scroll)。 */
+  .game-rail .log-scroll {
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+/* 青訓左欄的「第1/2/3年」進度小清單(見 YouthScreen.jsx)——手機版這塊
+   會排到最下面(跟 .game-rail 的 order:3 一致)，桌面版才會固定在左欄
+   常駐可見，等於幫玩家記著「還有幾年」。 */
+.youth-step {
+  margin: 6px 0;
+  font-size: 14px;
+  color: var(--text-dim);
+}
+.youth-step.current {
+  color: var(--gold-soft);
+  font-weight: 600;
+}
+.youth-step.done {
+  color: var(--text);
 }
 
 .screen-title {
