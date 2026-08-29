@@ -2,7 +2,7 @@ import { POSN, DPN, LOVE_STATUS, SQUAD_CHEMISTRY } from './engine.js';
 
 /* PlayerHeader.jsx(固定頭部) 跟 PlayerDetail.jsx(捲動內容區的展開細節) 共用的
    算式，抽出來避免兩個元件各寫一份。這裡也是「個人資料娛樂化」那輪討論
-   定案的四個欄位：教練態度/花心程度/投機娛樂指數是純敘事標籤(重用既有
+   定案的四個欄位：教練態度/緋聞話題度/財經話題度是純敘事標籤(重用既有
    數值換個說法，不加新state)，隊伍核心力是真的有機制效果的欄位(見
    flow/shared.js squadChemistryMult)，這裡只負責它的顯示標籤。 */
 
@@ -63,11 +63,17 @@ export function partnerInfo(S) {
   return `${statusLabel}：${partner.name}（${partner.title}）`;
 }
 
-/* 花心程度：重用 S.love.affairs(生涯累積出軌次數，PLAYBOY_STAR 稱號也是
-   看這個門檻)換個說法顯示——這個數字現在不只是顯示用，也會真的回饋進
-   下次出軌誘惑的觸發機率(見 data/love.js AFFAIR.repeatFactor)，這個標籤
-   本身還是純讀取，不用額外算，但底下的數字已經不是「純標籤無機制」了。 */
-export function fidelityLabel(S) {
+/* 稽核修正(使用者反饋：「花心程度」這個欄位名太直白，像是在給玩家的
+   人格下判斷)：改成跟 speculationBuzzLabel(財經話題度)同一套「話題度」
+   框架——不是「你這個人多花心」，是「你身上有多少緋聞可以聊」，同一份
+   資料(S.love.affairs，生涯累積出軌次數，PLAYBOY_STAR 稱號也是看這個
+   門檻)換成第三人稱的媒體視角來講，跟財經話題度的「低調理財，鮮少上
+   頭條」是同一種口吻。這個數字不只是顯示用，也會真的回饋進下次出軌
+   誘惑的觸發機率(見 data/love.js AFFAIR.repeatFactor)，這個標籤本身
+   還是純讀取，不用額外算，但底下的數字已經不是「純標籤無機制」了。
+   函式名稱也一併對齊 speculationBuzzLabel 的命名(原本叫 fidelityLabel，
+   還停在舊的「忠誠度」框架)。 */
+export function romanceBuzzLabel(S) {
   const affairs = S.love.affairs || 0;
   if (affairs === 0) return '忠誠可靠';
   if (affairs < 3) return '偶爾心猿意馬';

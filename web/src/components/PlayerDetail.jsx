@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ABL, POS_AB } from '../engine.js';
-import { careerTotals, partnerInfo, fidelityLabel, coachAttitudeLabel, speculationBuzzLabel, chemistryLabel } from '../playerCardUtils.js';
+import { careerTotals, partnerInfo, romanceBuzzLabel, coachAttitudeLabel, speculationBuzzLabel, chemistryLabel } from '../playerCardUtils.js';
 
 /* 「詳細訊息」——能力值/生涯數據/稱號，對照原版「只有點進細節才需要捲動」
    的設計，放在會捲動的中段內容區(不是固定頭部)，預設收合，不跟固定頭部
@@ -61,7 +61,7 @@ export default function PlayerDetail({ S, defaultOpen = false }) {
               </div>
             )}
             {S.club && <p className="frame-text fact-line">{coachAttitudeLabel(S)}</p>}
-            <p className="frame-text fact-line">花心程度：{fidelityLabel(S)}</p>
+            <p className="frame-text fact-line">緋聞話題度：{romanceBuzzLabel(S)}</p>
             {partnerInfo(S) && <p className="frame-text fact-line">{partnerInfo(S)}</p>}
             <p className="frame-text fact-line">財經話題度：{speculationBuzzLabel(S)}</p>
           </div>
