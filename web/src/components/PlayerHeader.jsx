@@ -1,5 +1,6 @@
 import { LV, playerName, stageLabel, calcOVR } from '../engine.js';
 import { posLabel, formatMoney } from '../playerCardUtils.js';
+import { useT } from '../i18n/localize.js';
 
 /* 固定在畫面最上方、不隨內容捲動的球員識別條——對照原版畫面「上半部球員資料」
    那塊：背號/姓名/位置一列，年齡/年份/OVR/存款這種隨時該看到但不用細看的
@@ -8,25 +9,30 @@ import { posLabel, formatMoney } from '../playerCardUtils.js';
    讓這塊長高的東西。 */
 export default function PlayerHeader({ S }) {
   const ovr = calcOVR(S);
+  const t = useT();
+  // 稽核修正(使用者委託：繁中/簡中雙語)：playerName(S) 包含玩家自己
+  // 打的姓名——OpenCC 只認識繁體專屬字元，玩家打英文/已經是簡體都是
+  // no-op，打繁體中文名字的話簡體模式跟著轉是一致的行為(整個介面都
+  // 切了語言，名字單獨留繁體反而突兀)，不用特別排除這個欄位。
   return (
     <div className="game-header">
       <div className="player-header-row">
-        <strong>{playerName(S)}</strong>
+        <strong>{t(playerName(S))}</strong>
         <span className="tier-badge">OVR {ovr}</span>
       </div>
       <div className="stat-strip">
         <span>
-          <strong>{S.year}</strong>年
+          <strong>{S.year}</strong>{t('年')}
         </span>
         <span>
-          <strong>{S.age}</strong>歲
+          <strong>{S.age}</strong>{t('歲')}
         </span>
-        {S.club && <span>{S.club}</span>}
+        {S.club && <span>{t(S.club)}</span>}
         <span>
           {/* 聯賽層級標籤跟著 .game-shell[data-tier] 那組 accent 走(見
               index.css 的稽核說明)，這裡直接吃 CSS 變數繼承，不用另外
               判斷——.game-shell 上的 data-tier 屬性哪裡設就從哪裡生效。 */}
-          <span className="league-label">{S.tier ? LV[S.tier].label : stageLabel(S)}</span> · {posLabel(S)}
+          <span className="league-label">{t(S.tier ? LV[S.tier].label : stageLabel(S))}</span> · {t(posLabel(S))}
         </span>
         {/* 金額一律加 € 符號——S.wage/S.savings 這輪貨幣重新校準之後已經是
             真的歐元年薪/存款量級(見 data/contract.js WAGE_BASE 的稽核
@@ -35,9 +41,9 @@ export default function PlayerHeader({ S }) {
             擠在一起會很難一眼看出大小；終局結算那些要看精確數字的地方
             維持完整千分位數字，兩者是不同的閱讀情境，見
             playerCardUtils.js formatMoney 的稽核說明。 */}
-        {S.wage > 0 && <span>薪資指數 €{formatMoney(S.wage)}</span>}
-        <span>存款 €{formatMoney(S.savings)}</span>
-        {S.national.caps > 0 && <span>國家隊 {S.national.caps} 次</span>}
+        {S.wage > 0 && <span>{t('薪資指數')} €{formatMoney(S.wage)}</span>}
+        <span>{t('存款')} €{formatMoney(S.savings)}</span>
+        {S.national.caps > 0 && <span>{t('國家隊')} {S.national.caps} {t('次')}</span>}
       </div>
     </div>
   );

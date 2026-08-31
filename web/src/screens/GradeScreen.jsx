@@ -1,23 +1,25 @@
 import { ABL, POSN, REGION, PATHS, describeOpening } from '../engine.js';
+import { useT } from '../i18n/localize.js';
 
 export default function GradeScreen({ S, grade, onContinue }) {
   const { flavorLine, abilityHintTemplate } = describeOpening(grade);
   const abilityHint = abilityHintTemplate.replace('{ability}', ABL[grade.topAbility]);
+  const t = useT();
 
   return (
     <div className="app-shell">
-      <h1 className="screen-title">開局評價</h1>
+      <h1 className="screen-title">{t('開局評價')}</h1>
       <div className="card">
         <p className="eyebrow">
-          {REGION[S.region].name} · {POSN[S.pos]} · {PATHS[S.path].label}
+          {t(REGION[S.region].name)} · {t(POSN[S.pos])} · {t(PATHS[S.path].label)}
         </p>
-        <p className="frame-text">{flavorLine}</p>
+        <p className="frame-text">{t(flavorLine)}</p>
         <p className="frame-text" style={{ marginTop: 8 }}>
-          {abilityHint}
+          {t(abilityHint)}
         </p>
       </div>
       <button className="primary-btn" onClick={onContinue}>
-        開始青訓
+        {t('開始青訓')}
       </button>
     </div>
   );

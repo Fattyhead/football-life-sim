@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ABL, POS_AB, ABILITY_HARD_CAP, previewAbilityLevel, previewAbilityProgress, overPotentialMultiplier } from '../engine.js';
+import { useT } from '../i18n/localize.js';
 
 /* 季初特訓——骰子成長(大頭)的自由分配畫面，對照 season_screen_prototype.html
    mockup 已經定案、使用者驗收過的設計：每季開場先擲 3-6 顆骰(見
@@ -21,6 +22,7 @@ export default function SeasonOpener({ S, opener, onConfirm }) {
   const abKeys = POS_AB[S.pos];
   const isGK = S.pos === 'GK';
   const [spent, setSpent] = useState({});
+  const t = useT();
 
   const totalSpent = Object.values(spent).reduce((a, b) => a + b, 0);
   const remaining = opener.pool - totalSpent;
@@ -41,20 +43,20 @@ export default function SeasonOpener({ S, opener, onConfirm }) {
 
   return (
     <div className="card season-opener">
-      <p className="eyebrow">季初特訓</p>
-      <p className="frame-text">教練組評估了你這個休賽期的狀態，這季有一筆自由訓練點數，你想怎麼分配？</p>
+      <p className="eyebrow">{t('季初特訓')}</p>
+      <p className="frame-text">{t('教練組評估了你這個休賽期的狀態，這季有一筆自由訓練點數，你想怎麼分配？')}</p>
       <div className="dice-roll-row">
         🎲 {opener.dice.map((f, i) => (
           <span className="dice-face" key={i}>
             {f}
           </span>
         ))}
-        <span>= {opener.pool} 點</span>
+        <span>= {opener.pool} {t('點')}</span>
       </div>
       {anyRoom ? (
         <>
           <p className="allocation-pool-readout">
-            剩餘可分配：<b>{remaining}</b> 點
+            {t('剩餘可分配')}：<b>{remaining}</b> {t('點')}
           </p>
           <div className="allocation-rows">
             {abKeys.map((k) => {
@@ -82,7 +84,7 @@ export default function SeasonOpener({ S, opener, onConfirm }) {
               const prog = previewAbilityProgress(S, k, spentHere, isGK);
               return (
                 <div className="allocation-row" key={k}>
-                  <span className="allocation-label">{ABL[k]}</span>
+                  <span className="allocation-label">{t(ABL[k])}</span>
                   <span className={`allocation-value${overPotential ? ' allocation-over-cap' : ''}`}>
                     {displayCur}
                     <span className="cell-unit">/{S.pot[k]}</span>
@@ -91,22 +93,26 @@ export default function SeasonOpener({ S, opener, onConfirm }) {
                     <button className="stepper-btn" disabled={!canSub} onClick={() => adjust(k, -1)}>
                       −
                     </button>
-                    <span className="allocation-spent">{prog && !prog.atCap ? `${prog.progress}/${prog.cost}` : '已練滿'}</span>
+                    <span className="allocation-spent">{prog && !prog.atCap ? `${prog.progress}/${prog.cost}` : t('已練滿')}</span>
                     <button className="stepper-btn" disabled={!canAdd} onClick={() => adjust(k, 1)}>
                       ＋
                     </button>
                   </div>
-                  {overPotential && <span className="allocation-over-cap-tag">超過潛力・下一級要花 ×{overMult} 點才加1級</span>}
+                  {overPotential && (
+                    <span className="allocation-over-cap-tag">
+                      {t('超過潛力・下一級要花')} ×{overMult} {t('點才加1級')}
+                    </span>
+                  )}
                 </div>
               );
             })}
           </div>
         </>
       ) : (
-        <p className="frame-text">能力值全部已經到頂，這筆點數這季沒地方可以花。</p>
+        <p className="frame-text">{t('能力值全部已經到頂，這筆點數這季沒地方可以花。')}</p>
       )}
       <button className="primary-btn" disabled={anyRoom && remaining !== 0} onClick={() => onConfirm(spent)}>
-        確認分配
+        {t('確認分配')}
       </button>
     </div>
   );

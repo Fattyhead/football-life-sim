@@ -7,6 +7,7 @@ import TrainingRivalry from '../components/TrainingRivalry.jsx';
 import { YOUTH_TRAINING_OPTION, YOUTH_OPPORTUNITY_OPTION, YOUTH_SOCIAL_OPTION } from '../engine.js';
 import { tierAccentKey } from '../playerCardUtils.js';
 import { useResetScrollOnMode } from '../useResetScrollOnMode.js';
+import { useT } from '../i18n/localize.js';
 
 const categories = {
   TRAINING: { table: YOUTH_TRAINING_OPTION, keys: Object.keys(YOUTH_TRAINING_OPTION) },
@@ -36,6 +37,9 @@ export default function YouthScreen({
   // 稽核修正(使用者反饋：季初特訓卡片不會自動回到面板頂部)：見
   // useResetScrollOnMode.js 的稽核說明，跟 ProScreen.jsx 同一套。
   const { bodyRef, contentRef, panelRef } = useResetScrollOnMode(mode);
+  // 稽核修正(使用者委託：繁中/簡中雙語)：見 ProScreen.jsx 同一段稽核
+  // 說明——這裡的 lastLine/risk.* 一樣是引擎動態組出來的敘事句。
+  const t = useT();
   return (
     <div className="game-shell" data-tier={tierAccentKey(S)}>
       <PlayerHeader S={S} />
@@ -43,10 +47,10 @@ export default function YouthScreen({
       <div className="game-body" ref={bodyRef}>
         <div className="game-rail">
           <div className="card youth-progress-card">
-            <p className="eyebrow">青訓進度</p>
+            <p className="eyebrow">{t('青訓進度')}</p>
             {youthSteps.map((y) => (
               <p key={y} className={`youth-step${y === yearIndex ? ' current' : ''}${y < yearIndex ? ' done' : ''}`}>
-                {y < yearIndex ? '✓' : y === yearIndex ? '●' : '○'}　青訓第 {y} 年
+                {y < yearIndex ? '✓' : y === yearIndex ? '●' : '○'}　{t('青訓第')} {y} {t('年')}
               </p>
             ))}
           </div>
@@ -54,7 +58,7 @@ export default function YouthScreen({
 
         <div className="game-content" ref={contentRef}>
           <h1 className="screen-title" style={{ fontSize: 'clamp(22px, 5vw, 30px)' }}>
-            青訓第 {yearIndex} 年
+            {t('青訓第')} {yearIndex} {t('年')}
           </h1>
           <PlayerDetail S={S} />
 
@@ -62,17 +66,17 @@ export default function YouthScreen({
             <div className="card">
               {risk.riskTag && (
                 <span className={`risk-result-tag ${risk.riskTag.success ? 'success' : 'fail'}`}>
-                  {risk.riskTag.label}・{risk.riskTag.success ? '成功' : '失手'}（{risk.riskTag.pct}%）
+                  {t(risk.riskTag.label)}・{risk.riskTag.success ? t('成功') : t('失手')}（{risk.riskTag.pct}%）
                 </span>
               )}
               {lastLine.map((l, i) => (
                 <p key={i} className="narrate-line">
-                  {l}
+                  {t(l)}
                 </p>
               ))}
-              {risk.riskFlavor && <p className="streak-flavor">{risk.riskFlavor}</p>}
+              {risk.riskFlavor && <p className="streak-flavor">{t(risk.riskFlavor)}</p>}
               {risk.titlesUnlocked.length > 0 && (
-                <div className="title-unlock-banner">🏅 新稱號解鎖：{risk.titlesUnlocked.join('、')}</div>
+                <div className="title-unlock-banner">🏅 {t('新稱號解鎖')}：{t(risk.titlesUnlocked.join('、'))}</div>
               )}
             </div>
           )}
@@ -91,7 +95,7 @@ export default function YouthScreen({
         {mode === 'choice' && <ChoiceMenu S={S} categories={categories} onPick={onPick} />}
         {mode === 'result' && (
           <button className="primary-btn" onClick={onContinue}>
-            {yearIndex < 3 ? '繼續' : '準備轉正式'}
+            {yearIndex < 3 ? t('繼續') : t('準備轉正式')}
           </button>
         )}
       </div>

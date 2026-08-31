@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { RISK_TIERS, optionHasRiskTier, effectiveRiskSuccessPct } from '../engine.js';
+import { useT } from '../i18n/localize.js';
 
 const CATEGORY_LABEL = { TRAINING: '訓練', OPPORTUNITY: '機會', SOCIAL: '社交' };
 
@@ -17,11 +18,16 @@ const CATEGORY_LABEL = { TRAINING: '訓練', OPPORTUNITY: '機會', SOCIAL: '社
    男人等)解鎖後會永久疊加對應那一檔的成功率，畫面顯示的數字要跟
    flow/shared.js resolveRiskTier() 真正在算的機率一致，不能顯示基準值。
    categories: { TRAINING: { table, keys }, OPPORTUNITY: {...}, SOCIAL: {...} }
-   table 是完整選項定義表，keys 是這次真正開放的子選項。 */
+   table 是完整選項定義表，keys 是這次真正開放的子選項。
+   稽核修正(使用者委託：繁中/簡中雙語)：table[k].label/desc 全部來自
+   data/yearlyOptions.js／data/youthOptions.js 的查表，跟這裡自己定義
+   的 CATEGORY_LABEL 常數一樣，統一用 t() 在渲染時轉換，data/*.js 本身
+   不動一個字(見 i18n/localize.js 的稽核說明)。 */
 export default function ChoiceMenu({ S, categories, onPick }) {
   const [phase, setPhase] = useState('category'); // 'category' | 'sub' | 'risk'
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedOption, setSelectedOption] = useState(null);
+  const t = useT();
 
   if (phase === 'category') {
     return (
@@ -35,8 +41,8 @@ export default function ChoiceMenu({ S, categories, onPick }) {
               setPhase('sub');
             }}
           >
-            <span className="opt-label">{CATEGORY_LABEL[category]}</span>
-            <span className="opt-desc">{keys.map((k) => table[k].label).join('、')}</span>
+            <span className="opt-label">{t(CATEGORY_LABEL[category])}</span>
+            <span className="opt-desc">{t(keys.map((k) => table[k].label).join('、'))}</span>
           </button>
         ))}
       </div>
@@ -49,10 +55,10 @@ export default function ChoiceMenu({ S, categories, onPick }) {
       <div>
         <div className="choice-substep-head">
           <button className="back-btn" onClick={() => setPhase('sub')}>
-            ← 換方式
+            ← {t('換方式')}
           </button>
           <span className="category-label" style={{ margin: 0 }}>
-            {def.label}
+            {t(def.label)}
           </span>
         </div>
         <div className="option-grid">
@@ -63,8 +69,8 @@ export default function ChoiceMenu({ S, categories, onPick }) {
               onClick={() => onPick(selectedCategory, selectedOption, tierKey)}
             >
               <span className="risk-tier-text">
-                <span className="opt-label">{tier.label}</span>
-                <span className="opt-desc">{tier.desc}</span>
+                <span className="opt-label">{t(tier.label)}</span>
+                <span className="opt-desc">{t(tier.desc)}</span>
               </span>
               <span className="risk-prob-badge">{effectiveRiskSuccessPct(S, tierKey)}%</span>
             </button>
@@ -79,10 +85,10 @@ export default function ChoiceMenu({ S, categories, onPick }) {
     <div>
       <div className="choice-substep-head">
         <button className="back-btn" onClick={() => setPhase('category')}>
-          ← 換方面
+          ← {t('換方面')}
         </button>
         <span className="category-label" style={{ margin: 0 }}>
-          {CATEGORY_LABEL[selectedCategory]}
+          {t(CATEGORY_LABEL[selectedCategory])}
         </span>
       </div>
       <div className="option-grid">
@@ -103,9 +109,9 @@ export default function ChoiceMenu({ S, categories, onPick }) {
             >
               <span className="opt-label">
                 {def.cost ? '💰 ' : ''}
-                {def.label}
+                {t(def.label)}
               </span>
-              <span className="opt-desc">{def.desc}</span>
+              <span className="opt-desc">{t(def.desc)}</span>
             </button>
           );
         })}

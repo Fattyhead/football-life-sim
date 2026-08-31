@@ -10,6 +10,7 @@ import SeasonOffer from '../components/SeasonOffer.jsx';
 import { TRAINING_OPTION, OPPORTUNITY_OPTION, SOCIAL_OPTION, LV } from '../engine.js';
 import { tierAccentKey } from '../playerCardUtils.js';
 import { useResetScrollOnMode } from '../useResetScrollOnMode.js';
+import { useT } from '../i18n/localize.js';
 
 function seasonStatLine(S, stat) {
   return S.pos === 'GK'
@@ -50,6 +51,13 @@ export default function ProScreen({
   // 稽核修正(使用者反饋：季初特訓卡片不會自動回到面板頂部)：見
   // useResetScrollOnMode.js 的稽核說明。
   const { bodyRef, contentRef, panelRef } = useResetScrollOnMode(mode);
+  // 稽核修正(使用者委託：繁中/簡中雙語)：frameText/lastLine/risk.* 這些
+  // 都是引擎(flow/narrate.js、flow/streakFlavor.js)動態組出來的敘事句，
+  // 不是這裡的字面常數——App.jsx 本身是純狀態機、不碰語言，統一在真正
+  // 渲染成畫面的這一層(每個 screen 元件)才轉換，data/*.js 裡的查表文字
+  // (TRAINING_OPTION 這些)也在這裡轉，兩種來源用同一個 t() 函式，不用
+  // 特別區分。
+  const t = useT();
 
   // 稽核修正(使用者反饋：桌面版三欄佈局)：中段拆成三塊獨立的區塊——
   // .game-rail 放生涯軌跡(唯讀、只會愈積愈多，跟「這一季」無關)，
@@ -68,13 +76,13 @@ export default function ProScreen({
         <div className="game-rail">
           {history.length > 0 && (
             <div className="card log-scroll">
-              <p className="eyebrow">生涯軌跡</p>
+              <p className="eyebrow">{t('生涯軌跡')}</p>
               {history
                 .slice()
                 .reverse()
                 .map((h, i) => (
                   <p key={i} className="frame-text" style={{ margin: '6px 0' }}>
-                    {h.year}年（{h.age}歲）{h.lines.join('　')}
+                    {h.year}年（{h.age}歲）{t(h.lines.join('　'))}
                   </p>
                 ))}
             </div>
@@ -87,7 +95,7 @@ export default function ProScreen({
           {mode === 'choice' && (
             <div className="card">
               <p className="frame-text" style={{ margin: 0 }}>
-                {frameText}
+                {t(frameText)}
               </p>
             </div>
           )}
@@ -102,25 +110,25 @@ export default function ProScreen({
                   長一樣。 */}
               {promotedTo && (
                 <div className="promotion-banner">
-                  🏆　晉級{LV[promotedTo].label}！
+                  🏆　{t('晉級')}{t(LV[promotedTo].label)}！
                 </div>
               )}
-              {lastStat && <p className="season-stat-line">{seasonStatLine(S, lastStat)}</p>}
+              {lastStat && <p className="season-stat-line">{t(seasonStatLine(S, lastStat))}</p>}
               {risk.riskTag && (
                 <span className={`risk-result-tag ${risk.riskTag.success ? 'success' : 'fail'}`}>
-                  {risk.riskTag.label}・{risk.riskTag.success ? '成功' : '失手'}（{risk.riskTag.pct}%）
+                  {t(risk.riskTag.label)}・{risk.riskTag.success ? t('成功') : t('失手')}（{risk.riskTag.pct}%）
                 </span>
               )}
               {lastLine.map((l, i) => (
                 <p key={i} className="narrate-line">
-                  {l}
+                  {t(l)}
                 </p>
               ))}
-              {risk.riskFlavor && <p className="streak-flavor">{risk.riskFlavor}</p>}
-              {risk.categoryFlavor && <p className="streak-flavor">{risk.categoryFlavor}</p>}
-              {risk.investFlavor && <p className="streak-flavor">{risk.investFlavor}</p>}
+              {risk.riskFlavor && <p className="streak-flavor">{t(risk.riskFlavor)}</p>}
+              {risk.categoryFlavor && <p className="streak-flavor">{t(risk.categoryFlavor)}</p>}
+              {risk.investFlavor && <p className="streak-flavor">{t(risk.investFlavor)}</p>}
               {risk.titlesUnlocked.length > 0 && (
-                <div className="title-unlock-banner">🏅 新稱號解鎖：{risk.titlesUnlocked.join('、')}</div>
+                <div className="title-unlock-banner">🏅 {t('新稱號解鎖')}：{t(risk.titlesUnlocked.join('、'))}</div>
               )}
             </div>
           )}
@@ -145,7 +153,7 @@ export default function ProScreen({
         {mode === 'choice' && <ChoiceMenu S={S} categories={categories} onPick={onPick} />}
         {mode === 'result' && (
           <button className="primary-btn" onClick={onContinue}>
-            繼續
+            {t('繼續')}
           </button>
         )}
       </div>

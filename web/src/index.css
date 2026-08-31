@@ -1279,6 +1279,37 @@ select:focus {
   margin-top: 14px;
 }
 
+/* 語言切換(見 TitleScreen.jsx 的稽核說明)——放在畫面最上方、跟主要
+   內容區隔開一點距離，一個小小的雙按鈕切換器，不搶標題的視覺重量。
+   選中的那顆用跟遊戲識別一致的金色外框+文字標示「現在是這個」。 */
+.locale-switch-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  justify-content: flex-end;
+}
+.locale-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-dim);
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  padding: 6px 14px;
+  cursor: pointer;
+}
+.locale-btn:hover,
+.locale-btn:focus-visible {
+  border-color: var(--gold);
+  color: var(--text);
+}
+.locale-btn.active {
+  border-color: var(--gold);
+  background: color-mix(in srgb, var(--gold) 14%, transparent);
+  color: var(--gold-soft);
+  font-weight: 700;
+}
+
 /* ---------- 怎麼玩(HelpScreen.jsx) ---------- */
 .help-section {
   margin-bottom: 18px;
