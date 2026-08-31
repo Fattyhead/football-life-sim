@@ -4,6 +4,28 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>足球人生模擬器</title>
+
+    <!-- 稽核修正(使用者委託：og:meta 三件套)：連結被分享到 LINE/Discord/
+         Facebook/Twitter(X) 這些平台時，這些平台不會直接顯示網址，而是
+         抓這裡的標籤生一張「連結預覽卡」——沒有這些標籤就只有一行藍色
+         網址，沒有預覽圖。og:image 用的是專門畫的一張 1200×630 橫向海報
+         圖(web/public/og.png，Canvas 手繪，跟 shareCardImage.js 同一套
+         視覺識別但獨立的靜態版面，不是直接拿玩家的掛靴卡分享圖硬塞——
+         那張是直向/依內容動態變高，長寬比對不上社群平台的標準比例)。
+         og:url/og:image 一定要用完整絕對網址(不能用相對路徑)，因為抓
+         這些標籤的是各平台的伺服器爬蟲，不是玩家的瀏覽器，沒有目前頁面
+         的網址脈絡可以拿來解析相對路徑。 -->
+    <meta name="description" content="從青訓到掛靴，走一段完全屬於你的足球人生模擬器——同一顆種子，同一個命運；換一顆種子，換一段全新的旅程。免費、無廣告、不用登入帳號。" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="足球人生模擬器" />
+    <meta property="og:description" content="從青訓到掛靴，走一段完全屬於你的足球人生——同一顆種子，同一個命運；換一顆種子，換一段全新的旅程。" />
+    <meta property="og:image" content="https://fattyhead.github.io/football-life-sim/og.png" />
+    <meta property="og:url" content="https://fattyhead.github.io/football-life-sim/" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="足球人生模擬器" />
+    <meta name="twitter:description" content="從青訓到掛靴，走一段完全屬於你的足球人生——同一顆種子，同一個命運；換一顆種子，換一段全新的旅程。" />
+    <meta name="twitter:image" content="https://fattyhead.github.io/football-life-sim/og.png" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
