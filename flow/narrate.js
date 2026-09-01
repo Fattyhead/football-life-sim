@@ -32,7 +32,7 @@ import { INJURY_TIER } from '../data/injury.js';
 import { CUP_ROUND_LABEL } from '../data/competitions.js';
 import { GENIUS } from '../data/mastery.js';
 import { DECLINE_START } from '../data/decline.js';
-import { clubPrestigeOf, positionKey } from './shared.js';
+import { clubPrestigeOf, positionKey, WAGE_PREMIUM_BONUS_CAP } from './shared.js';
 
 const CUP_DEEP_RUN = ['SF', 'FINAL', 'CHAMPION']; // 只有打進四強以上才值得專門講一句，資格賽/32強不夠戲劇性
 
@@ -49,6 +49,16 @@ function posLabel(S) {
    移到 narrateSeason 主體裡當保底一定會印的段落(見下面 log.contractRenewed
    那段)，跟晉級/降級/轉會同一個待遇——都是球員生涯的重要節點，不該
    靠運氣決定看不看得到。 */
+// 稽核修正(使用者反饋：經紀人/訓練夥伴/配偶都太無感，遊玩過程中感覺不到
+// 這些人的存在有幫助)：三條副線各自的機制效果(經紀人的薪資溢價/訓練
+// 夥伴的隊伍核心力/配偶的穩定加成)其實都有在跑，但只有在觸發的那個
+// 瞬間(CROSSROADS 抉擇/認識/離隊)才會被講到，之間的「平常日子」完全
+// 感覺不到這些人還在——這裡刻意不新增任何操作/選項(使用者明確要求)，
+// 只是讓這幾個角色在既有的填充句池裡「被看見」：這一季選了對應的類別
+// 又剛好沒有其他戲劇性的事發生時，優先讓池子裡混進「提到這個人」的
+// 變化版本，玩家平常玩就會反覆看到這些人還在身邊，不用等到下一次
+// CROSSROADS 才想起他們存在。隱藏(秘密)對象刻意不進這組——那條線的
+// 張力來自「保密」，混進日常閒聊的填充句反而稀釋掉那個設定。
 function quietPool(S, log, category) {
   const byCategory = {
     TRAINING: [
@@ -57,6 +67,17 @@ function quietPool(S, log, category) {
       `${S.age}歲的你，還是每天第一個到球場、最後一個離開。`,
       '進步不明顯，但你知道累積是這樣一回事。',
       '教練在訓練後單獨稱讚了你幾句，僅此而已。',
+      ...(S.trainingPartner
+        ? S.trainingPartner.type === 'RIVAL'
+          ? [
+              `${S.trainingPartner.name}還是那個緊盯著你數據的人，訓練場上這股較勁感一直都在。`,
+              `跟${S.trainingPartner.name}又較勁了一整年，誰都不肯先鬆懈。`,
+            ]
+          : [
+              `${S.trainingPartner.name}還是那個跟你一起留下來加練的人，訓練場上多了個伴。`,
+              `跟${S.trainingPartner.name}一起在訓練場上磨了整整一年，默契又更深了一點。`,
+            ]
+        : []),
     ],
     OPPORTUNITY: [
       '你利用空檔到處交際、打探消息，替未來鋪路。',
@@ -65,6 +86,12 @@ function quietPool(S, log, category) {
       '沒什麼具體成果，但至少多認識了幾張臉。',
       '球探跟經紀人的飯局排了一場又一場，話說得很多，能落地的還不多。',
       '你開始留意自己在轉會市場上的位置，盤算著下一步。',
+      ...(S.agent
+        ? [
+            `經紀人${S.agent.name}這一年幫你盯著轉會市場的風向，你樂得輕鬆。`,
+            `${S.agent.name}三不五時跟你更新一下行情，多少讓你安心不少。`,
+          ]
+        : []),
     ],
     SOCIAL: [
       '這一年感情生活平淡，日子照常過。',
@@ -73,6 +100,12 @@ function quietPool(S, log, category) {
       '沒什麼新鮮事，但日子過得踏實。',
       '這一年你把更多心力放在球場外的自己身上，不趕著證明什麼。',
       '沒有大新聞，但生活過得比想像中充實。',
+      ...(S.love.partner && !S.love.partner.hidden
+        ? [
+            `有${S.love.partner.name}在身邊，這一年過得平淡卻踏實。`,
+            `跟${S.love.partner.name}的日子照常過——沒有大事，但很安心。`,
+          ]
+        : []),
     ],
   };
 
@@ -92,6 +125,23 @@ function quietPool(S, log, category) {
    最後、也最重的一句沒有得到該有的份量。門檻不需要判斷，用一組池子
    降低單一句子被重覆讀到的機率(生涯只會觸發一次，理論上不會重複，
    但跨輪次重玩會反覆看到，所以還是要有變化)。 */
+/* 稽核修正(使用者反饋：經紀人的作用太無感，建議在簽約時加一句經紀人
+   爭取到幾%調薪)：simContract() 算薪水時，經紀人線疊加的 S.wagePremiumBonus
+   是薪資溢價的其中一個構成項(另一項是位置市場行情，見 flow/shared.js
+   signContract 的稽核說明)，這裡只挑出「經紀人這條線帶來的部分」單獨
+   講清楚，不是整個薪資公式都算成經紀人的功勞。wagePremiumBonus 這個
+   數值池也會被 ETERNAL_CAPTAIN 稱號疊加(見 flow/worldCup.js
+   checkWCHonors)，不是 100% 純經紀人貢獻，但只要玩家「當下真的有簽
+   經紀人」，把這個數字講成「經紀人爭取來的」是合理的簡化——談判桌上
+   坐著的本來就是他，不管籌碼實際從哪來。沒有經紀人、或這個池子還是
+   0(還沒累積出任何溢價)就不講，不硬湊一句空話。 */
+function agentWageClause(S) {
+  if (!S.agent) return null;
+  const pct = Math.round(Math.min(WAGE_PREMIUM_BONUS_CAP, S.wagePremiumBonus || 0) * 100);
+  if (pct <= 0) return null;
+  return `經紀人${S.agent.name}這次幫你多爭取到${pct}%的薪資空間。`;
+}
+
 const NATURAL_RETIREMENT_LINES = [
   '身體終究還是先撐不住了，你脫下球衣，結束這段旅程。',
   '沒有戲劇性的告別儀式，你只是在球季結束後，靜靜地決定不再踢下去了。',
@@ -519,6 +569,21 @@ export function narrateSeason(S, log, ri) {
   if (c.newKid) {
     lines.push(`家裡多了一個小生命——第${c.newKid}個孩子誕生了。`);
   }
+  // 稽核修正(使用者反饋：配偶/交往對象存在感更薄弱)：flow/romance.js
+  // runRomanceAmbient() 的穩定度時刻(stabilityMoment)之前刻意設計成
+  // 機率性、不保底的小加成(避免變成每季固定送分)，但也因此完全沒有
+  // 對應的敘事——玩家感覺不到這個人在生活裡有實際作用，只在認識/求婚/
+  // 分手這些大節點才被提到。這裡補一句很輕的日常互動，不是新開一個
+  // 事件(不算戲劇性節點，池子刻意跟上面「大事件」的措辭份量分開)，
+  // 隱藏(秘密)對象不進來——理由跟 quietPool() 那組一致。
+  if (c.stabilityMoment && S.love.partner && !S.love.partner.hidden) {
+    const stabilityPool = [
+      `${S.love.partner.name}在你狀態低潮的時候陪你聊了很多，這一季莫名地踏實。`,
+      `跟${S.love.partner.name}的相處總在細節裡幫上忙——這一季狀態感覺特別穩。`,
+      `${S.love.partner.name}總能在你需要的時候說對話，這一季你踢得比想像中安心。`,
+    ];
+    lines.push(stabilityPool[ri(0, stabilityPool.length - 1)]);
+  }
   // 稽核修正(使用者反饋：轉會的提示不明顯)：晉級轉會/豪門挖角原本各自
   // 只有一句固定措辭——一輪生涯可能發生不只一次(尤其晉級，地區聯賽→
   // 跳板聯賽→五大聯賽最多兩次)，逐字重複的機率不低，補成小池子，跟
@@ -530,6 +595,8 @@ export function narrateSeason(S, log, ri) {
       `告別${S.lastClub}，你正式加盟${S.club}——${LV[log.promotion.from].label}的日子，到此為止了。`,
     ];
     lines.push(promoPool[ri(0, promoPool.length - 1)]);
+    const promoWageClause = agentWageClause(S);
+    if (promoWageClause) lines.push(promoWageClause);
   }
   if (log.lateralMove) {
     const lateralPool = [
@@ -538,6 +605,8 @@ export function narrateSeason(S, log, ri) {
       `${S.club}砸下重金把你買走，你揮別${log.lateralMove.from}，站上了更大的舞台。`,
     ];
     lines.push(lateralPool[ri(0, lateralPool.length - 1)]);
+    const lateralWageClause = agentWageClause(S);
+    if (lateralWageClause) lines.push(lateralWageClause);
   }
   // 稽核修正(使用者反饋：簽約的提示都沒看到)：續約從 quietPool 移過來
   // 當保底一定會印的段落，見上面 quietPool() 的稽核說明——三句措辭原封
@@ -549,6 +618,12 @@ export function narrateSeason(S, log, ri) {
       `經紀人幫你談成續約，薪水數字比上一份合約好看一些。`,
     ];
     lines.push(contractPool[ri(0, contractPool.length - 1)]);
+    // 稽核修正(使用者反饋：經紀人的作用太無感，建議在簽約時加一句經紀人
+    // 爭取到幾%調薪)：見上面 agentWageClause() 的稽核說明——晉級/豪門
+    // 挖角/續約三種簽約情境都補這一句，讓經紀人的存在跟「你的薪水數字」
+    // 直接掛上鉤，不用等到 CROSSROADS 那一季才想起他。
+    const contractWageClause = agentWageClause(S);
+    if (contractWageClause) lines.push(contractWageClause);
   }
   if (log.clubCup?.round && CUP_DEEP_RUN.includes(log.clubCup.round)) {
     lines.push(`跟著球隊在${log.clubCup.cup}一路踢進${CUP_ROUND_LABEL[log.clubCup.round]}，這是隊史級的一季。`);

@@ -335,7 +335,7 @@ function rollReleaseClause(ri) {
    本末倒置。封頂訂在 0.35，貼齊 POS_MARKET 的量級上限、也大致等於一次性
    稱號全拿的合理總和，讓「重選同一個選項」不能超過「真的拿到稀有成就」
    的天花板。 */
-const WAGE_PREMIUM_BONUS_CAP = 0.35;
+export const WAGE_PREMIUM_BONUS_CAP = 0.35;
 
 /* 簽約公式，開局/續約/轉會晉級都共用同一份，只有 tier 不同。
    wage = WAGE_BASE[tier] × CLUB_PRESTIGE_WAGE_MULT[豪門等級] × (OVR/30) ×
