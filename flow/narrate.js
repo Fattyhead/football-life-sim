@@ -27,11 +27,12 @@
 
 import { ABL, DPN, POSN } from '../data/abilities.js';
 import { LV } from '../data/regions.js';
-import { WC_ROUND_LABEL } from '../data/national.js';
+import { WC_ROUND_ORDER } from '../data/national.js';
 import { INJURY_TIER } from '../data/injury.js';
 import { CUP_ROUND_LABEL } from '../data/competitions.js';
 import { GENIUS } from '../data/mastery.js';
-import { clubPrestigeOf } from './shared.js';
+import { DECLINE_START } from '../data/decline.js';
+import { clubPrestigeOf, positionKey } from './shared.js';
 
 const CUP_DEEP_RUN = ['SF', 'FINAL', 'CHAMPION']; // 只有打進四強以上才值得專門講一句，資格賽/32強不夠戲劇性
 
@@ -39,17 +40,16 @@ function posLabel(S) {
   return S.pos === 'GK' ? POSN.GK : DPN[S.subPosition] || POSN[S.pos];
 }
 
-/* 平淡年份的候選句池，依這季選的類別決定用哪一組，續約的措辭混在同一組裡
-   (contractRenewed 為 true 才會被抽到，用函式包起來延後判斷)。 */
+/* 平淡年份的候選句池，依這季選的類別決定用哪一組。
+   稽核修正(使用者反饋：簽約/轉會的提示都沒看到)：續約(contractRenewed)
+   原本混在這個池子裡，只有「這季沒有其他事發生」才有機會被抽到，而且
+   還要在填充句陣列裡跟5、6句不相干的話搶籤——續約平均3-5年一次，機率
+   不低，但只要同一季剛好還發生了別的事(戀愛/訓練夥伴/世界盃隨便一條
+   常駐線)，續約就會被完全蓋掉，玩家實測感覺不到「我續約了」這件事。
+   移到 narrateSeason 主體裡當保底一定會印的段落(見下面 log.contractRenewed
+   那段)，跟晉級/降級/轉會同一個待遇——都是球員生涯的重要節點，不該
+   靠運氣決定看不看得到。 */
 function quietPool(S, log, category) {
-  const contract = log.contractRenewed
-    ? [
-        `合約到期，${S.club}開出新的續約條件，你簽了下去。`,
-        `${S.club}主動找上門續約，你們談妥了新的一份合約。`,
-        `經紀人幫你談成續約，薪水數字比上一份合約好看一些。`,
-      ]
-    : [];
-
   const byCategory = {
     TRAINING: [
       '這一年你把時間都花在訓練場上，一點一滴累積實力。',
@@ -76,7 +76,7 @@ function quietPool(S, log, category) {
     ],
   };
 
-  return [...contract, ...(byCategory[category] || byCategory.TRAINING)];
+  return byCategory[category] || byCategory.TRAINING;
 }
 
 /* 入口：一季的 log(+這季選的 category) 攤成一個段落陣列。除了退休四條
@@ -344,20 +344,83 @@ export function narrateSeason(S, log, ri) {
     lines.push(`合約到期，球隊只願意用一份縮水的短約留你——你嚥下這口氣，簽了字，決心用下一季證明自己。`);
   }
   if (log.worldCup) {
-    const roundLabel = WC_ROUND_LABEL[log.worldCup.round];
+    const round = log.worldCup.round;
+    const roundIdx = WC_ROUND_ORDER.indexOf(round);
+    // 稽核修正(使用者反饋：世界盃沒有世界盃的感覺，只有拿冠軍那次有描述，
+    // 其他時候不知道自己有沒有參加)：原本整屆賽事不管踢到哪一輪，都只
+    // 換一句「世界盃OO輪」的結果句帶過，小組賽/16強/八強/四強這些真正
+    // 走過的過程完全沒有著墨，讀起來像是憑空跳到一個最終結果，不是走過
+    // 一輪一輪淘汰賽打上去的。改成分階段疊加：開場句(入選)之後，小組賽
+    // 出不出線是第一關，出線了才有資格往下講淘汰賽的路——用「拿下OO
+    // 之後」把實際踢過的輪次都點名一次，玩家才會覺得自己真的一輪一輪
+    // 打上來，不是引擎直接吐一個最終戰績。round==='CHAMPION' 的奪冠瞬間
+    // 已經在上面 log.worldCup?.honors?.includes('WORLD_CHAMPION') 那段
+    // 用專屬的慶祝句講過了(疊加式敘事下，那句會先印出來)，這裡的淘汰賽
+    // 路線段落還是照樣補上，讓「怎麼一路打到冠軍」的過程不會缺席。
     // 首次入選才是真的「這輩子最大的舞台」——實測讀story.js輸出抓到的
     // 問題：這句話原本不分第幾次入選都一字不改，生涯第二、第三次入選
     // 還在講「這輩子最大的舞台」，份量感沒有隨次數/戰績調整。第一次維持
     // 原本的框架，之後改用「再次入選」的口吻，不重複消費同一句話。
     if (S.national.caps === 1) {
-      lines.push(`世界盃${roundLabel}，你穿著國家隊球衣站上這輩子最大的舞台之一。`);
+      lines.push(`世界盃資格賽的窗口打開，你穿著國家隊球衣，站上這輩子最大的舞台之一。`);
     } else {
       const repeatPool = [
-        `再次代表國家隊出征世界盃，這次踢到了${roundLabel}。`,
-        `世界盃${roundLabel}——這已經不是你第一次站上這個舞台了。`,
-        `又一屆世界盃，你的名字再次出現在國家隊名單上，這次戰績是${roundLabel}。`,
+        `國家隊窗口再度打開，你的名字再次出現在世界盃名單上。`,
+        `又一屆世界盃，你重新穿上了那件國家隊球衣。`,
+        `再次代表國家隊出征——這不是你第一次站上這個舞台了。`,
       ];
       lines.push(repeatPool[ri(0, repeatPool.length - 1)]);
+    }
+
+    // 小組賽：每一屆一定會踢，是整場賽事的第一關，出不出線決定後面
+    // 還有沒有戲可以講。
+    if (roundIdx === 0) {
+      const groupOutPool = [
+        `三場小組賽踢完，積分不夠，你們止步在這一關——連16強都沒摸到。`,
+        `小組賽三戰下來，運氣跟表現都沒站在你們這邊，早早就打包回家了。`,
+        `出線那道門檻，這次你們沒能跨過去——小組賽，就是這屆賽事的終點。`,
+      ];
+      lines.push(groupOutPool[ri(0, groupOutPool.length - 1)]);
+    } else {
+      const groupThroughPool = [
+        `三場小組賽踢完，你們順利拿到出線資格，晉級淘汰賽。`,
+        `小組賽有驚無險地拿下出線權，你們闖進了16強。`,
+        `三場小組賽踢下來，你們笑著走進了淘汰賽的大門。`,
+      ];
+      lines.push(groupThroughPool[ri(0, groupThroughPool.length - 1)]);
+
+      // 淘汰賽路：只有真的晉級才有戲可講，用「拿下OO之後」把中間踢過的
+      // 輪次都點名一次，讓玩家感覺是自己一輪一輪打上去的，不是憑空跳到
+      // 最終結果。
+      if (round === 'R16') {
+        const r16OutPool = [
+          `16強一戰打得難分難解，最終你們還是倒在了這一輪。`,
+          `淘汰賽第一輪，對手技高一籌，你們止步16強。`,
+        ];
+        lines.push(r16OutPool[ri(0, r16OutPool.length - 1)]);
+      } else if (round === 'QF') {
+        const qfOutPool = [
+          `拿下16強之後，你們在八強止步——這屆賽事的旅程，到這裡畫下句點。`,
+          `晉級16強之後氣勢正旺，但八強賽，你們沒能再前進一步。`,
+        ];
+        lines.push(qfOutPool[ri(0, qfOutPool.length - 1)]);
+      } else if (round === 'SF') {
+        const sfOutPool = [
+          `拿下16強、八強之後，你們一路殺進四強——最終在準決賽止步，離決賽只差一步。`,
+          `16強、八強接連拿下，四強賽這一戰，你們沒能笑到最後。`,
+        ];
+        lines.push(sfOutPool[ri(0, sfOutPool.length - 1)]);
+      } else if (round === 'FINAL' || round === 'CHAMPION') {
+        const deepRunPool = [
+          `拿下16強之後，你們氣勢一路延續，接連淘汰八強、四強的對手，殺進了這一屆的最終戰。`,
+          `16強、八強、四強，一輪一輪硬碰硬地打下來，你們挺進了決賽。`,
+        ];
+        lines.push(deepRunPool[ri(0, deepRunPool.length - 1)]);
+        if (round === 'FINAL') {
+          lines.push(`冠軍戰踢到了最後一刻——這次，獎盃還是留在了對手手上，你們拿到了亞軍。`);
+        }
+        // round === 'CHAMPION' 的收尾已經有上面的專屬慶祝句，這裡不重複。
+      }
     }
     // 訓練夥伴線交叉(COMRADE 版，見 flow/nationalRival.js
     // checkTrainingComradeSelected 的稽核說明)：跟對手指派是完全獨立的
@@ -421,11 +484,36 @@ export function narrateSeason(S, log, ri) {
   if (c.newKid) {
     lines.push(`家裡多了一個小生命——第${c.newKid}個孩子誕生了。`);
   }
+  // 稽核修正(使用者反饋：轉會的提示不明顯)：晉級轉會/豪門挖角原本各自
+  // 只有一句固定措辭——一輪生涯可能發生不只一次(尤其晉級，地區聯賽→
+  // 跳板聯賽→五大聯賽最多兩次)，逐字重複的機率不低，補成小池子，跟
+  // 降級/合約危機那幾組同一個規格。
   if (log.promotion) {
-    lines.push(`轉會傳出——你告別${S.lastClub}，加盟${S.club}，從${LV[log.promotion.from].label}一步跳到${LV[log.promotion.to].label}。`);
+    const promoPool = [
+      `轉會傳出——你告別${S.lastClub}，加盟${S.club}，從${LV[log.promotion.from].label}一步跳到${LV[log.promotion.to].label}。`,
+      `${S.club}送來一紙合約，你毫不猶豫地簽了——從${LV[log.promotion.from].label}升上${LV[log.promotion.to].label}，這是你等了很久的一步。`,
+      `告別${S.lastClub}，你正式加盟${S.club}——${LV[log.promotion.from].label}的日子，到此為止了。`,
+    ];
+    lines.push(promoPool[ri(0, promoPool.length - 1)]);
   }
   if (log.lateralMove) {
-    lines.push(`豪門主動開價——你告別${log.lateralMove.from}，加盟${S.club}，這是生涯的重要一步。`);
+    const lateralPool = [
+      `豪門主動開價——你告別${log.lateralMove.from}，加盟${S.club}，這是生涯的重要一步。`,
+      `一通挖角電話打來，${S.club}想要你——你告別${log.lateralMove.from}，轉戰豪門。`,
+      `${S.club}砸下重金把你買走，你揮別${log.lateralMove.from}，站上了更大的舞台。`,
+    ];
+    lines.push(lateralPool[ri(0, lateralPool.length - 1)]);
+  }
+  // 稽核修正(使用者反饋：簽約的提示都沒看到)：續約從 quietPool 移過來
+  // 當保底一定會印的段落，見上面 quietPool() 的稽核說明——三句措辭原封
+  // 不動搬過來，只是換了保證會被看到的位置，不是重寫內容。
+  if (log.contractRenewed) {
+    const contractPool = [
+      `合約到期，${S.club}開出新的續約條件，你簽了下去。`,
+      `${S.club}主動找上門續約，你們談妥了新的一份合約。`,
+      `經紀人幫你談成續約，薪水數字比上一份合約好看一些。`,
+    ];
+    lines.push(contractPool[ri(0, contractPool.length - 1)]);
   }
   if (log.clubCup?.round && CUP_DEEP_RUN.includes(log.clubCup.round)) {
     lines.push(`跟著球隊在${log.clubCup.cup}一路踢進${CUP_ROUND_LABEL[log.clubCup.round]}，這是隊史級的一季。`);
@@ -441,6 +529,41 @@ export function narrateSeason(S, log, ri) {
   }
   if (log.lostPlaystyle?.length) {
     lines.push(`歲月不饒人，過去引以為傲的招牌能力，如今已經不再是巔峰水準。`);
+  }
+  // 稽核修正(使用者反饋：完全感覺不到能力因老化衰退)：flow/proSeason.js
+  // applyDecline() 每季都有真的在扣能力值(log.declineLoss)，但這個數字
+  // 一直只有 demo.js(headless除錯用)在讀，敘事層從來沒講過——玩家只能
+  // 自己去翻能力值面板、自己心算「這幾點是不是被衰退吃掉的」，遊戲從
+  // 沒有主動告訴過玩家「你正在變老」這件事真的發生了。frameChoice.js
+  // 的 ageClause() 已經有依年齡帶給的氛圍句(季初、選擇之前)，但那是
+  // 「感覺」，不是「這季真的掉了多少」的結果確認——這裡補的是後者，
+  // 兩者不重複(措辭刻意不撞，一個講氛圍、一個講剛發生的事)。三個門檻
+  // 對齊 data/decline.js baseDecline() 本來就有的三段(剛起衰/中期/晚期)，
+  // 不是另外發明一套判斷。
+  if (log.declineLoss) {
+    const declineStart = DECLINE_START[positionKey(S)] + (S.declineStartBonus || 0);
+    const yearsPast = S.age - declineStart;
+    let declinePool;
+    if (yearsPast <= 2) {
+      declinePool = [
+        `這季練完，你隱約感覺到——有些動作，好像不像以前那麼輕鬆了。`,
+        `數據面板上悄悄少了幾點，你告訴自己這只是狀態波動，但心裡有數，那不完全是原因。`,
+        `教練組私下建議你多留意恢復跟保養——這是這幾年頭一次聽到這種話。`,
+      ];
+    } else if (yearsPast <= 5) {
+      declinePool = [
+        `體能下滑已經藏不住了——這季你明顯感覺到，自己不再是巔峰時期的那個自己。`,
+        `速度、爆發力，一項一項在流失，你開始靠經驗跟位置感彌補腿上少掉的東西。`,
+        `年輕球員一個接一個追上來，你比誰都清楚，自己正在走下坡。`,
+      ];
+    } else {
+      declinePool = [
+        `身體幾乎跟不上腦子想做的事了——這幾年掉下來的，已經補不回來了。`,
+        `你早就不是那個能靠身體天賦硬拚的球員了，剩下的只有經驗跟意志撐著。`,
+        `每一場比賽結束，恢復的時間都比以前長——你比誰都清楚，時間所剩不多。`,
+      ];
+    }
+    lines.push(declinePool[ri(0, declinePool.length - 1)]);
   }
   if (log.subPositionChanged) {
     lines.push(`教練把你從${DPN[log.subPositionChanged.from] || log.subPositionChanged.from}改踢${DPN[log.subPositionChanged.to] || log.subPositionChanged.to}，新角色等著你適應。`);
