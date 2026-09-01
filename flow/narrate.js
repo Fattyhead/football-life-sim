@@ -309,6 +309,20 @@ export function narrateSeason(S, log, ri) {
   if (log.newInjury === 'MAJOR') {
     lines.push(`一次不留神的對抗，${INJURY_TIER.MAJOR.label}讓你缺席了大半個賽季。`);
   }
+  // 稽核修正(使用者反饋「其他有沒有相關問題」延伸出來的系統性比對)：
+  // 受傷有講(newInjury/injuryEscalated)，傷好了卻完全沒講——跟衰退是
+  // 同一種「有機制、沒敘事」的漏洞，flow/proSeason.js tickExistingInjury()
+  // 傷勢週數歸零時一直有寫 log.recovered，narrate.js 從來沒讀過。
+  // frameChoice.js 的 bodyClause() 只在「還帶著傷」時提示，傷好的那一季
+  // 沒有對應的收尾句，玩家只能自己發現傷勢欄位消失了。
+  if (log.recovered) {
+    const recoveredPool = [
+      `${INJURY_TIER[log.recovered].label}總算養好了，你重新回到球場上。`,
+      `休養了一段時間，${INJURY_TIER[log.recovered].label}終於痊癒，你歸隊了。`,
+      `傷勢總算過去，你甩開繃帶，重新站回訓練場上。`,
+    ];
+    lines.push(recoveredPool[ri(0, recoveredPool.length - 1)]);
+  }
   // 從豪門(ELITE)摔下來的降級/放棄續約，跟一般降級的份量感不該一樣——
   // 實測讀story.js輸出抓到的問題：一個從皇馬等級豪門被放棄續約、一路
   // 掉到below-TOP5聯賽的傳奇球星，跟一個從普通聯賽被踢到更低層級的
@@ -467,6 +481,27 @@ export function narrateSeason(S, log, ri) {
   if (c.proposalRejected) {
     lines.push(`你鼓起勇氣求婚，卻沒能等到你想要的答案——這段感情還在，但這一季，氣氛有點尷尬。`);
   }
+  // 稽核修正(同一輪系統性比對)：求婚選擇「再等等」——玩家真的做了選擇
+  // (跟被拒絕不一樣，這是主動延後)，卻完全沒有句子確認這件事發生過，
+  // 跟上面「求婚被拒」同一個節點，只是分支不一樣，該有同等待遇。
+  if (c.proposalDelayed) {
+    const delayedPool = [
+      `話到嘴邊，你還是決定再緩一緩——這段感情，你覺得還沒到那一步。`,
+      `你選擇再給彼此一點時間，這次沒有把話說出口。`,
+    ];
+    lines.push(delayedPool[ri(0, delayedPool.length - 1)]);
+  }
+  // 稽核修正(同一輪系統性比對)：出軌誘惑選「拒絕」跟選「接受」的份量
+  // 應該對等——接受(不管有沒有被抓包)都有專屬句子，拒絕卻完全靜默，
+  // 玩家做了一個需要意志力的選擇，遊戲卻沒有回應這個選擇本身。
+  if (c.declinedAffair) {
+    const declinedAffairPool = [
+      '那個心照不宣的眼神，你選擇了視而不見——這一步，你沒有跨過去。',
+      '誘惑就擺在眼前，你還是選擇了收手。',
+      '一時的心動，你最終沒有讓它變成事實。',
+    ];
+    lines.push(declinedAffairPool[ri(0, declinedAffairPool.length - 1)]);
+  }
   if (c.affairDiscovered) {
     lines.push(c.divorced ? `婚外情曝光，紙包不住火——婚姻在這年劃下句點。` : `一場婚外情差點被抓包，這季家裡氣氛降到冰點，但你們撐了過去。`);
   }
@@ -523,6 +558,19 @@ export function narrateSeason(S, log, ri) {
   }
   if (log.loanedTo) {
     lines.push(`你被外借到${LV[log.loanedTo].label}，一個證明自己的機會。`);
+  }
+  // 稽核修正(同一輪系統性比對抓出來的一致性落差)：狗仔認識新對象選
+  // 「否認」、訓練夥伴/經紀人邀約選「不予理會」都有專屬的零代價收尾句
+  // (見下面 c.paparazziDenied/c.trainingEncounterIgnored/
+  // c.agentEncounterIgnored)，租借邀約選擇婉拒卻完全沒有——同一種
+  // 「拒絕邀約」的選擇模式，待遇不一致，玩家實測感覺不到自己剛剛做了
+  // 選擇。
+  if (log.declinedLoan) {
+    const declinedLoanPool = [
+      `${LV[log.declinedLoan].label}球隊拋來租借邀約，你選擇留在原隊，沒有點頭。`,
+      `租借的邀約擺在眼前，你這次決定留下來，繼續在熟悉的環境裡踢球。`,
+    ];
+    lines.push(declinedLoanPool[ri(0, declinedLoanPool.length - 1)]);
   }
   if (log.unlockedPlaystyle?.length) {
     lines.push(`苦練終於有成，你在${posLabel(S)}這個位置上多了一項拿手絕活。`);
